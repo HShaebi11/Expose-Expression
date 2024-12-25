@@ -46,9 +46,21 @@ function draw() {
   clear();
   
   if (isVideo && backgroundVideo) {
-    image(backgroundVideo, 0, 0, width, height);
+    // Calculate scaling factors for cover effect
+    let scale = Math.max(width / backgroundVideo.width, height / backgroundVideo.height);
+    let w = backgroundVideo.width * scale;
+    let h = backgroundVideo.height * scale;
+    let x = (width - w) / 2;
+    let y = (height - h) / 2;
+    image(backgroundVideo, x, y, w, h);
   } else if (backgroundImage) {
-    image(backgroundImage, 0, 0, width, height);
+    // Calculate scaling factors for cover effect
+    let scale = Math.max(width / backgroundImage.width, height / backgroundImage.height);
+    let w = backgroundImage.width * scale;
+    let h = backgroundImage.height * scale;
+    let x = (width - w) / 2;
+    let y = (height - h) / 2;
+    image(backgroundImage, x, y, w, h);
   } else {
     background(colourBG);
   }
