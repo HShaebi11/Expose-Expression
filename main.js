@@ -1,3 +1,88 @@
+let backgroundHandler = {
+  type: 'color',  // 'color', 'image', or 'video'
+  color: 220,
+  defaultColor: 220,
+  image: null,
+  video: null,
+  
+  // Method to draw the current background
+  draw: function() {
+    switch(this.type) {
+      case 'video':
+        if (this.video) {
+          this.drawMedia(this.video);
+        }
+        break;
+      case 'image':
+        if (this.image) {
+          this.drawMedia(this.image);
+        }
+        break;
+      default:
+        background(this.color);
+    }
+  },
+
+  // Helper method for drawing media with proper scaling
+  drawMedia: function(media) {
+    let scale = Math.max(width / media.width, height / media.height);
+    let w = media.width * scale;
+    let h = media.height * scale;
+    let x = (width - w) / 2;
+    let y = (height - h) / 2;
+    image(media, x, y, w, h);
+  },
+
+  // Method to update background
+  setBackground: function(input) {
+    if (typeof input === 'string') {  // Color string
+      this.type = 'color';
+      this.color = color(input);
+    } else if (input instanceof p5.Image) {
+      this.type = 'image';
+      this.image = input;
+    } else if (input instanceof p5.MediaElement) {
+      this.type = 'video';
+      if (this.video) {
+        this.video.remove();
+      }
+      this.video = input;
+      this.video.loop();
+      this.video.hide();
+      this.video.volume(0);
+    }
+  },
+
+  // Add reset method
+  reset: function() {
+    // Remove video if it exists
+    if (this.video) {
+      this.video.remove();
+      this.video = null;
+    }
+    
+    // Clear image
+    this.image = null;
+    
+    // Reset to default color
+    this.type = 'color';
+    this.color = this.defaultColor;
+    
+    // Reset color picker if it exists
+    let colorPicker = document.getElementById('colourBG');
+    if (colorPicker) {
+      colorPicker.value = '#DCDCDC';  // Default color in hex
+      colorPicker.style.backgroundColor = colorPicker.value;
+    }
+    
+    // Reset file input if it exists
+    let uploadBG = document.getElementById('uploadBG');
+    if (uploadBG) {
+      uploadBG.value = '';  // Clear the file input
+    }
+  }
+};
+
 let colourBG = 220;
 let backgroundImage = null;
 let backgroundVideo = null;
@@ -21,6 +106,23 @@ function setup() {
   pg = createGraphics(width, height);
   createSliders();
 
+  // Background upload setup
+  let uploadBG = document.getElementById('uploadBG');
+  if (uploadBG) {
+    uploadBG.addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file.type.startsWith('video/')) {
+        createVideo(URL.createObjectURL(file), video => {
+          backgroundHandler.setBackground(video);
+        });
+      } else if (file.type.startsWith('image/')) {
+        loadImage(URL.createObjectURL(file), img => {
+          backgroundHandler.setBackground(img);
+        });
+      }
+    });
+  }
+
   // Color picker setup
   let colourPicker = document.getElementById('colourBG');
   if (colourPicker) {
@@ -28,33 +130,8 @@ function setup() {
     colourPicker.style.backgroundColor = colourPicker.value;
     
     colourPicker.addEventListener('input', function() {
-      colourBG = color(this.value);
+      backgroundHandler.setBackground(this.value);
       this.style.backgroundColor = this.value;
-    });
-  }
-
-  // Background upload setup
-  let uploadBG = document.getElementById('uploadBG');
-  if (uploadBG) {
-    uploadBG.addEventListener('change', function(e) {
-      const file = e.target.files[0];
-      if (file.type.startsWith('video/')) {
-        isVideo = true;
-        if (backgroundVideo) {
-          backgroundVideo.remove();
-        }
-        backgroundVideo = createVideo(URL.createObjectURL(file), () => {
-          backgroundVideo.loop();
-          backgroundVideo.hide();
-          backgroundVideo.volume(0);
-          backgroundVideo.play();
-        });
-      } else if (file.type.startsWith('image/')) {
-        isVideo = false;
-        loadImage(URL.createObjectURL(file), img => {
-          backgroundImage = img;
-        });
-      }
     });
   }
 
@@ -69,29 +146,21 @@ function setup() {
       this.style.backgroundColor = this.value;
     });
   }
+
+  // Reset background button setup
+  let resetBG = document.getElementById('resetBG');
+  if (resetBG) {
+    resetBG.addEventListener('click', function() {
+      backgroundHandler.reset();
+    });
+  }
 }
 
 function draw() {
   clear();
   
-  // Handle background first
-  if (isVideo && backgroundVideo) {
-    let scale = Math.max(width / backgroundVideo.width, height / backgroundVideo.height);
-    let w = backgroundVideo.width * scale;
-    let h = backgroundVideo.height * scale;
-    let x = (width - w) / 2;
-    let y = (height - h) / 2;
-    image(backgroundVideo, x, y, w, h);
-  } else if (backgroundImage) {
-    let scale = Math.max(width / backgroundImage.width, height / backgroundImage.height);
-    let w = backgroundImage.width * scale;
-    let h = backgroundImage.height * scale;
-    let x = (width - w) / 2;
-    let y = (height - h) / 2;
-    image(backgroundImage, x, y, w, h);
-  } else {
-    background(colourBG);
-  }
+  // Draw background
+  backgroundHandler.draw();
 
   // Clear the PGraphics buffer
   pg.clear();
