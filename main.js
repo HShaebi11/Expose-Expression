@@ -96,11 +96,19 @@ let tsx, tsy;
 let ts, tw, tt, tl;  // New control variables
 
 function setup() {
+  // Get the parent div element
   let outputDiv = document.getElementById('output');
+  
+  // Create canvas with the same dimensions as the parent div
   let canvas = createCanvas(outputDiv.offsetWidth, outputDiv.offsetHeight);
+  
+  // Move the canvas inside the output div
   canvas.parent('output');
-  canvas.style('width', '100%');
-  canvas.style('height', '100%');
+  
+  // Optional: Add window resize handling
+  window.addEventListener('resize', function() {
+    resizeCanvas(outputDiv.offsetWidth, outputDiv.offsetHeight);
+  });
 
   // Initialize PGraphics and sliders
   pg = createGraphics(width, height);
