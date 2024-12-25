@@ -6,6 +6,8 @@ let font;
 let pg;
 let tX, tY, sp, dspx, dspy, fct;
 let colourText = 255; // Default white text
+let tpx, tpy;
+let tsx, tsy;
 
 function setup() {
   let outputDiv = document.getElementById('output');
@@ -71,7 +73,7 @@ function setup() {
 function draw() {
   clear();
   
-  // Handle background
+  // Handle background first
   if (isVideo && backgroundVideo) {
     let scale = Math.max(width / backgroundVideo.width, height / backgroundVideo.height);
     let w = backgroundVideo.width * scale;
@@ -90,18 +92,19 @@ function draw() {
     background(colourBG);
   }
 
-  // Draw kinetic typography
+  // Clear the PGraphics buffer
+  pg.clear();
   pg.background(0, 0, 0, 0); // transparent background
-  pg.fill(colourText); // Use the selected text color instead of hardcoded white
+  pg.fill(colourText);
   pg.textAlign(CENTER, CENTER);
   
-  // Calculate dynamic text size based on text length
   let inputText = textInput.value;
   let textSize = height / (2 + (inputText ? inputText.length : 0) * 0.2);
   pg.textSize(textSize);
   
   pg.push();
-  pg.translate(width/2, height/2);
+  pg.translate(width/2 + parseFloat(tpx.value) * 5, height/2 + parseFloat(tpy.value) * 5);
+  pg.scale(parseFloat(tsx.value), parseFloat(tsy.value));
   pg.text(inputText, 0, 0);
   pg.pop();
 
@@ -138,6 +141,10 @@ function createSliders() {
   dspx = document.getElementById('rangeDX');
   dspy = document.getElementById('rangeDY');
   fct = document.getElementById('rangeOffset');
+  tpx = document.getElementById('rangeTPX');
+  tpy = document.getElementById('rangeTPY');
+  tsx = document.getElementById('rangeTSX');
+  tsy = document.getElementById('rangeTSY');
 
   // Add event listeners to update display values
   tX.addEventListener('input', () => {
@@ -157,5 +164,19 @@ function createSliders() {
   });
   fct.addEventListener('input', () => {
     document.getElementById('rangeValueOffset').textContent = fct.value;
+  });
+  tpx.addEventListener('input', () => {
+    document.getElementById('rangeValueTPX').textContent = tpx.value;
+  });
+  tpy.addEventListener('input', () => {
+    document.getElementById('rangeValueTPY').textContent = tpy.value;
+  });
+  tsx.addEventListener('input', () => {
+    document.getElementById('rangeValueTSX').textContent = tsx.value;
+    console.log('TSX changed:', tsx.value);
+  });
+  tsy.addEventListener('input', () => {
+    document.getElementById('rangeValueTSY').textContent = tsy.value;
+    console.log('TSY changed:', tsy.value);
   });
 }
