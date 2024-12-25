@@ -162,6 +162,8 @@ function setup() {
       backgroundHandler.reset();
     });
   }
+
+  setupExportButtons();
 }
 
 function draw() {
@@ -339,5 +341,191 @@ function initializeRangeValue(displayId, slider, suffix = '') {
   const display = document.getElementById(displayId);
   if (display && slider) {
     display.textContent = slider.value + suffix;
+  }
+}
+
+function setupExportButtons() {
+  // PDF Export
+  document.getElementById('exportPDF').addEventListener('click', exportToPDF);
+  
+  // PNG Export
+  document.getElementById('exportPNG').addEventListener('click', exportToPNG);
+  
+  // JPG Export
+  document.getElementById('exportJPG').addEventListener('click', exportToJPG);
+  
+  // SVG Export
+  document.getElementById('exportSVG').addEventListener('click', exportToSVG);
+  
+  // MP4 Export
+  document.getElementById('exportMP4').addEventListener('click', exportToMP4);
+}
+
+function exportToPDF() {
+  const outputDiv = document.getElementById('output');
+  html2pdf()
+    .from(outputDiv)
+    .save('kinetic-type-export.pdf');
+}
+
+function exportToPNG() {
+  saveCanvas('kinetic-type-export', 'png');
+}
+
+function exportToJPG() {
+  saveCanvas('kinetic-type-export', 'jpg');
+}
+
+function exportToSVG() {
+  // Create a new SVG element
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('width', width);
+  svg.setAttribute('height', height);
+  
+  // Convert canvas content to SVG
+  const svgData = pg.elt.toDataURL('image/svg+xml');
+  const link = document.createElement('a');
+  link.download = 'kinetic-type-export.svg';
+  link.href = svgData;
+  link.click();
+}
+
+async function exportToMP4() {
+  try {
+    // Check for MediaRecorder support
+    if (!window.MediaRecorder) {
+      throw new Error('Your browser does not support video recording');
+    }
+
+    // Check for canvas existence
+    const canvas = document.querySelector('#defaultCanvas0');
+    if (!canvas) {
+      throw new Error('Canvas element not found');
+    }
+
+    // Create timestamp for filename
+    const now = new Date();
+    const timestamp = [
+      now.getFullYear().toString(),
+      (now.getMonth() + 1).toString().padStart(2, '0'),
+      now.getDate().toString().padStart(2, '0'),
+      now.getHours().toString().padStart(2, '0'),
+      now.getMinutes().toString().padStart(2, '0'),
+      now.getSeconds().toString().padStart(2, '0')
+    ].join('-');
+
+    // Check browser support for specific codec
+    const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=h264') 
+      ? 'video/webm;codecs=h264'
+      : 'video/webm';
+
+    // Get stream with error handling
+    let stream;
+    try {
+      stream = canvas.captureStream(30);
+    } catch (err) {
+      throw new Error(`Failed to capture canvas stream: ${err.message}`);
+    }
+
+    // Create MediaRecorder with supported options
+    const mediaRecorder = new MediaRecorder(stream, {
+      mimeType,
+      videoBitsPerSecond: 5000000
+    });
+
+    const chunks = [];
+    
+    return new Promise((resolve, reject) => {
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) {
+          chunks.push(e.data);
+        }
+      };
+
+      mediaRecorder.onerror = (event) => {
+        reject(new Error(`Recording error: ${event.error.message}`));
+        resetUI();
+      };
+
+      mediaRecorder.onstop = async () => {
+        try {
+          const blob = new Blob(chunks, { type: 'video/webm' });
+          const url = URL.createObjectURL(blob);
+          
+          // Create and trigger download
+          const a = document.createElement('a');
+          a.style.display = 'none';
+          a.href = url;
+          a.download = `expressionofexpose-${timestamp}.webm`;
+          
+          document.body.appendChild(a);
+          a.click();
+          
+          // Cleanup
+          setTimeout(() => {
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+          }, 100);
+          
+          resolve();
+        } catch (err) {
+          reject(new Error(`Failed to save recording: ${err.message}`));
+        } finally {
+          resetUI();
+        }
+      };
+
+      // UI handling functions
+      const resetUI = () => {
+        const recordButton = document.getElementById('exportMP4');
+        if (recordButton) {
+          recordButton.style.backgroundColor = '';
+          recordButton.textContent = 'Export MP4';
+          recordButton.disabled = false;
+        }
+      };
+
+      const updateUI = () => {
+        const recordButton = document.getElementById('exportMP4');
+        if (recordButton) {
+          recordButton.style.backgroundColor = 'red';
+          recordButton.textContent = 'Recording...';
+          recordButton.disabled = true;
+        }
+      };
+
+      // Start recording
+      try {
+        updateUI();
+        mediaRecorder.start(100);
+        console.log('Recording started...');
+
+        // Stop recording after 3 seconds
+        setTimeout(() => {
+          if (mediaRecorder.state === 'recording') {
+            mediaRecorder.stop();
+            console.log('Recording stopped');
+          }
+        }, 3000);
+
+        // Cleanup handler
+        const cleanupHandler = () => {
+          if (mediaRecorder.state === 'recording') {
+            mediaRecorder.stop();
+          }
+          window.removeEventListener('beforeunload', cleanupHandler);
+        };
+
+        window.addEventListener('beforeunload', cleanupHandler);
+        
+      } catch (err) {
+        reject(new Error(`Failed to start recording: ${err.message}`));
+        resetUI();
+      }
+    });
+  } catch (err) {
+    console.error('Export error:', err);
+    alert(err.message);
+    throw err;
   }
 }
