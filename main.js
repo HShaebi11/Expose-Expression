@@ -2,13 +2,10 @@ let colourBG = 220;
 let backgroundImage = null;
 let backgroundVideo = null;
 let isVideo = false;
-let tiles = [];
-const rows = 15;
-const cols = 20;
-let time = 0;
 let font;
 let pg;
 let tX, tY, sp, dspx, dspy, fct;
+let colourText = 255; // Default white text
 
 function setup() {
   let outputDiv = document.getElementById('output');
@@ -20,29 +17,6 @@ function setup() {
   // Initialize PGraphics and sliders
   pg = createGraphics(width, height);
   createSliders();
-
-  // Recalculate tile size to fill canvas
-  const tileSize = Math.min(width / cols, height / rows);
-  
-  // Clear existing tiles
-  tiles = [];
-  
-  // Initialize tiles with enhanced random properties
-  for (let i = 0; i < rows; i++) {
-    for (let j = 0; j < cols; j++) {
-      tiles.push({
-        x: j * tileSize,
-        y: i * tileSize,
-        size: tileSize,
-        amplitude: random(10, 25),
-        period: random(1.5, 3.5),
-        phase: random(TWO_PI),
-        velocity: random(-2, 2),
-        chaos: random(0.1, 0.3),
-        speedMultiplier: random(1, 2.5)
-      });
-    }
-  }
 
   // Color picker setup
   let colourPicker = document.getElementById('colourBG');
@@ -80,6 +54,18 @@ function setup() {
       }
     });
   }
+
+  // Add text color picker setup
+  let textColorPicker = document.getElementById('colourText');
+  if (textColorPicker) {
+    textColorPicker.value = '#FFFFFF';
+    textColorPicker.style.backgroundColor = textColorPicker.value;
+    
+    textColorPicker.addEventListener('input', function() {
+      colourText = color(this.value);
+      this.style.backgroundColor = this.value;
+    });
+  }
 }
 
 function draw() {
@@ -106,7 +92,7 @@ function draw() {
 
   // Draw kinetic typography
   pg.background(0, 0, 0, 0); // transparent background
-  pg.fill(255);
+  pg.fill(colourText); // Use the selected text color instead of hardcoded white
   pg.textAlign(CENTER, CENTER);
   
   // Calculate dynamic text size based on text length
@@ -137,52 +123,11 @@ function draw() {
       copy(pg, sx, sy, tileW, tileH, x*tileW, y*tileH, tileW, tileH);
     }
   }
-
-  // Draw existing wave animation
-  noStroke();
-  fill(255, 255, 255, 100);
-
-  for (let tile of tiles) {
-    let dx = mouseX - (tile.x + tile.size/2);
-    let dy = mouseY - (tile.y + tile.size/2);
-    let distance = sqrt(dx*dx + dy*dy);
-    
-    let repulsionForce = 200 / (distance + 1);
-    
-    let noiseVal = noise(tile.x * 0.01, tile.y * 0.01, time) * 20;
-    
-    let baseOffset = tile.amplitude * sin(time * tile.period * tile.speedMultiplier + tile.phase);
-    let mouseOffset = repulsionForce * 25 * sin(distance * 0.03 - time * 3);
-    let chaosOffset = noiseVal * tile.chaos;
-    
-    tile.velocity += (mouseOffset + chaosOffset - tile.velocity) * 0.15;
-    tile.velocity *= 0.98;
-    
-    let totalOffset = baseOffset + tile.velocity;
-
-    beginShape();
-    vertex(tile.x, tile.y + totalOffset);
-    vertex(tile.x + tile.size, tile.y + totalOffset);
-    vertex(tile.x + tile.size, tile.y + tile.size + totalOffset);
-    vertex(tile.x, tile.y + tile.size + totalOffset);
-    endShape(CLOSE);
-  }
-
-  time += 0.04;
 }
 
 function windowResized() {
   let outputDiv = document.getElementById('output');
   resizeCanvas(outputDiv.offsetWidth, outputDiv.offsetHeight);
-  
-  const tileSize = Math.min(width / cols, height / rows);
-  tiles.forEach((tile, index) => {
-    let i = Math.floor(index / cols);
-    let j = index % cols;
-    tile.x = j * tileSize;
-    tile.y = i * tileSize;
-    tile.size = tileSize;
-  });
 }
 
 function createSliders() {
