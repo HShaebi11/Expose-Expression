@@ -90,6 +90,11 @@ function drawMediaBackground(media) {
 function draw() {
   clear();
   drawBackground();
+  
+  // Add circle that follows mouse
+  fill(255, 255, 255, 150); // White with 150 alpha (semi-transparent)
+  noStroke();
+  circle(mouseX, mouseY, 300);
 }
 
 function windowResized() {
