@@ -7,9 +7,18 @@ function setup() {
   let outputDiv = document.getElementById('output');
   let canvas = createCanvas(outputDiv.offsetWidth, outputDiv.offsetHeight);
   canvas.parent('output');
+  
+  // Ensure canvas fills the div completely
   canvas.style('width', '100%');
   canvas.style('height', '100%');
-
+  canvas.style('display', 'block');
+  
+  // Adjust the output div style
+  outputDiv.style.position = 'relative';
+  outputDiv.style.width = '100%';
+  outputDiv.style.height = '100%';
+  outputDiv.style.overflow = 'hidden';
+  
   setupBackgroundControls();
 }
 
@@ -81,12 +90,8 @@ function drawMediaBackground(media) {
 function draw() {
   clear();
   drawBackground();
-  
-  fill(255, 0, 0);
-  circle(width/2, height/2, 100);
 }
 
-// Resize canvas when window is resized
 function windowResized() {
   let outputDiv = document.getElementById('output');
   resizeCanvas(outputDiv.offsetWidth, outputDiv.offsetHeight);
