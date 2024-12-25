@@ -10,6 +10,11 @@ function setup() {
   canvas.style('width', '100%');
   canvas.style('height', '100%');
 
+  setupBackgroundControls();
+}
+
+function setupBackgroundControls() {
+  // Color picker setup
   let colourPicker = document.getElementById('colourBG');
   colourPicker.value = '#DCDCDC';
   colourPicker.style.backgroundColor = colourPicker.value;
@@ -19,51 +24,63 @@ function setup() {
     this.style.backgroundColor = this.value;
   });
 
+  // Background upload setup
   let uploadBG = document.getElementById('uploadBG');
-  uploadBG.addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    if (file.type.startsWith('video/')) {
-      isVideo = true;
-      if (backgroundVideo) {
-        backgroundVideo.remove();
-      }
-      backgroundVideo = createVideo(URL.createObjectURL(file), () => {
-        backgroundVideo.loop();
-        backgroundVideo.hide();
-        backgroundVideo.volume(0);
-        backgroundVideo.play();
-      });
-    } else if (file.type.startsWith('image/')) {
-      isVideo = false;
-      loadImage(URL.createObjectURL(file), img => {
-        backgroundImage = img;
-      });
-    }
+  uploadBG.addEventListener('change', handleBackgroundUpload);
+}
+
+function handleBackgroundUpload(e) {
+  const file = e.target.files[0];
+  if (file.type.startsWith('video/')) {
+    setupVideoBackground(file);
+  } else if (file.type.startsWith('image/')) {
+    setupImageBackground(file);
+  }
+}
+
+function setupVideoBackground(file) {
+  isVideo = true;
+  if (backgroundVideo) {
+    backgroundVideo.remove();
+  }
+  backgroundVideo = createVideo(URL.createObjectURL(file), () => {
+    backgroundVideo.loop();
+    backgroundVideo.hide();
+    backgroundVideo.volume(0);
+    backgroundVideo.play();
   });
+}
+
+function setupImageBackground(file) {
+  isVideo = false;
+  loadImage(URL.createObjectURL(file), img => {
+    backgroundImage = img;
+  });
+}
+
+function drawBackground() {
+  if (isVideo && backgroundVideo) {
+    drawMediaBackground(backgroundVideo);
+  } else if (backgroundImage) {
+    drawMediaBackground(backgroundImage);
+  } else {
+    background(colourBG);
+  }
+}
+
+function drawMediaBackground(media) {
+  // Calculate scaling factors for cover effect
+  let scale = Math.max(width / media.width, height / media.height);
+  let w = media.width * scale;
+  let h = media.height * scale;
+  let x = (width - w) / 2;
+  let y = (height - h) / 2;
+  image(media, x, y, w, h);
 }
 
 function draw() {
   clear();
-  
-  if (isVideo && backgroundVideo) {
-    // Calculate scaling factors for cover effect
-    let scale = Math.max(width / backgroundVideo.width, height / backgroundVideo.height);
-    let w = backgroundVideo.width * scale;
-    let h = backgroundVideo.height * scale;
-    let x = (width - w) / 2;
-    let y = (height - h) / 2;
-    image(backgroundVideo, x, y, w, h);
-  } else if (backgroundImage) {
-    // Calculate scaling factors for cover effect
-    let scale = Math.max(width / backgroundImage.width, height / backgroundImage.height);
-    let w = backgroundImage.width * scale;
-    let h = backgroundImage.height * scale;
-    let x = (width - w) / 2;
-    let y = (height - h) / 2;
-    image(backgroundImage, x, y, w, h);
-  } else {
-    background(colourBG);
-  }
+  drawBackground();
   
   fill(255, 0, 0);
   circle(width/2, height/2, 100);
