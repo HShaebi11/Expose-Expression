@@ -96,8 +96,8 @@ function draw() {
   pg.textAlign(CENTER, CENTER);
   
   // Calculate dynamic text size based on text length
-  let inputText = textInput.value || 'a';
-  let textSize = height / (2 + inputText.length * 0.2); // Adjust text size based on length
+  let inputText = textInput.value;
+  let textSize = height / (2 + (inputText ? inputText.length : 0) * 0.2);
   pg.textSize(textSize);
   
   pg.push();
