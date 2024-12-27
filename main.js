@@ -16,13 +16,24 @@ function setup() {
 }
 
 function draw() {
-  // Update variables from sliders
+  // Update variables from sliders and display their values
   E1TX = document.getElementById('rangeE1TX').value;
+  document.getElementById('rangeValueE1TX').textContent = E1TX;
+
   E1TY = document.getElementById('rangeE1TY').value;
+  document.getElementById('rangeValueE1TY').textContent = E1TY;
+
   E1DX = document.getElementById('rangeE1DX').value;
+  document.getElementById('rangeValueE1DX').textContent = E1DX;
+
   E1DY = document.getElementById('rangeE1DY').value;
+  document.getElementById('rangeValueE1DY').textContent = E1DY;
+
   E1Offset = document.getElementById('rangeE1Offset').value;
+  document.getElementById('rangeValueE1Offset').textContent = E1Offset;
+
   E1Speed = document.getElementById('rangeE1Speed').value;
+  document.getElementById('rangeValueE1Speed').textContent = E1Speed;
 
   background(0);
 
