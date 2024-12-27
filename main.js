@@ -567,53 +567,135 @@ function handleBackgroundUpload() {
 }
 
 function handleE1Upload() {
+  // Create file input
   let input = document.createElement('input');
   input.type = 'file';
   input.accept = 'image/*,video/*,.svg';
   
-  input.onchange = function(e) {
-    let file = e.target.files[0];
-    
-    // Disable text input
-    let textArea = document.getElementById('textAreaE1');
-    if (textArea) {
-      textArea.disabled = true;
+  input.onchange = async function(e) {
+    try {
+      // Validate file exists
+      if (!e.target.files || !e.target.files[0]) {
+        throw new Error('No file selected');
+      }
+      
+      const file = e.target.files[0];
+      const maxSize = 50 * 1024 * 1024; // 50MB limit
+      
+      // Validate file size
+      if (file.size > maxSize) {
+        throw new Error('File size too large (max 50MB)');
+      }
+
+      // Disable text input early
+      const textArea = document.getElementById('textAreaE1');
+      if (textArea) {
+        textArea.disabled = true;
+      }
+
+      // Handle different file types
+      if (file.name.toLowerCase().endsWith('.svg')) {
+        await handleSVGUpload(file);
+      } else if (file.type.startsWith('image/')) {
+        await handleImageUpload(file);
+      } else if (file.type.startsWith('video/')) {
+        await handleVideoUpload(file);
+      } else {
+        throw new Error('Unsupported file type');
+      }
+
+    } catch (error) {
+      console.error('Upload error:', error);
+      alert(`Upload failed: ${error.message}`);
+      resetE1(); // Reset to default state on error
     }
+  };
+  
+  // Trigger file selection
+  input.click();
+}
+
+// Helper functions for each file type
+function handleSVGUpload(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
     
-    if (file.name.toLowerCase().endsWith('.svg')) {
-      // Handle SVG
-      let reader = new FileReader();
-      reader.onload = function(event) {
-        loadImage(event.target.result, img => {
+    reader.onload = function(event) {
+      loadImage(event.target.result, 
+        // Success callback
+        img => {
           E1Media = img;
           E1Type = 'svg';
           toggleE1Controls('svg');
-        });
-      };
-      reader.readAsDataURL(file);
-    } else if (file.type.startsWith('image/')) {
-      // Handle image
-      loadImage(URL.createObjectURL(file), img => {
+          resolve();
+        },
+        // Error callback
+        () => reject(new Error('Failed to load SVG'))
+      );
+    };
+    
+    reader.onerror = () => reject(new Error('Failed to read SVG file'));
+    reader.readAsDataURL(file);
+  });
+}
+
+function handleImageUpload(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    loadImage(url,
+      // Success callback
+      img => {
         E1Media = img;
         E1Type = 'image';
         toggleE1Controls('image');
-      });
-    } else if (file.type.startsWith('video/')) {
-      // Handle video
-      let video = createVideo(URL.createObjectURL(file), () => {
+        URL.revokeObjectURL(url); // Clean up
+        resolve();
+      },
+      // Error callback
+      () => {
+        URL.revokeObjectURL(url);
+        reject(new Error('Failed to load image'));
+      }
+    );
+  });
+}
+
+function handleVideoUpload(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const video = createVideo(url, () => {
+      try {
         E1Media = video;
         E1Type = 'video';
-        // Safari requires video to be played within a user gesture
+        
+        // Configure video element
         video.elt.playsInline = true;
         video.elt.muted = true;
         video.loop();
         video.hide();
+        
+        // Check if video is actually playable
+        if (video.elt.videoWidth === 0 || video.elt.videoHeight === 0) {
+          throw new Error('Invalid video format');
+        }
+        
         toggleE1Controls('video');
-      });
-    }
-  };
-  
-  input.click();
+        URL.revokeObjectURL(url);
+        resolve();
+      } catch (error) {
+        URL.revokeObjectURL(url);
+        video.remove();
+        reject(error);
+      }
+    });
+
+    // Add error handling for video loading
+    video.elt.onerror = () => {
+      URL.revokeObjectURL(url);
+      video.remove();
+      reject(new Error('Failed to load video'));
+    };
+  });
 }
 
 function toggleE1Controls(type) {
