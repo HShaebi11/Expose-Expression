@@ -91,12 +91,17 @@ let font;
 let pg;
 
 class ElementHandler {
-  constructor(id) {
-    this.id = id;  // 'E1', 'E2', etc.
+  constructor(id, zIndex = 0) {
+    this.id = id;      // 'E1', 'E2', etc.
+    this.zIndex = zIndex;  // New property for stacking order
     this.colour = 255; // Default white text
-    this.text = ''; // Variable to store the text
+    this.text = '';    // Variable to store the text
     this.type = 'text'; // Can be 'text', 'svg', 'image', or 'video'
     this.media = null;
+    
+    // Position properties
+    this.x = 0;
+    this.y = 0;
     
     // GRID AND ANIMATION CONTROLS
     this.controls = {
@@ -142,12 +147,48 @@ class ElementHandler {
     }
   }
 
+  // Add method to change z-index
+  setZIndex(index) {
+    this.zIndex = index;
+  }
+
+  drawText(pg) {
+    console.log(`Drawing ${this.id} with type ${this.type}`);
+    // ... rest of drawText method ...
+  }
+
+  drawMedia(pg) {
+    console.log(`Drawing ${this.id} media of type ${this.type}`);
+    // ... rest of drawMedia method ...
+  }
+
   // ... rest of the methods
 }
 
-// Create instances for both elements
-let E1 = new ElementHandler('E1');
-let E2 = new ElementHandler('E2');
+// Create instances with z-index values
+let E1 = new ElementHandler('E1', 0); // Bottom layer
+let E2 = new ElementHandler('E2', 1); // Top layer
+
+console.log('E1:', E1);
+console.log('E2:', E2);
+
+// Make them visually distinct
+E1.colour = color(255, 0, 0);  // Make E1 red
+E2.colour = color(0, 255, 0);  // Make E2 green
+
+// Set different z-indices to ensure they're both visible
+E1.setZIndex(1);
+E2.setZIndex(2);
+
+// Add some default text if none exists
+if (!E1.text) E1.text = "Element 1";
+if (!E2.text) E2.text = "Element 2";
+
+// Position them in different places
+E1.x = width / 3;
+E2.x = (width / 3) * 2;
+E1.y = height / 2;
+E2.y = height / 2;
 
 function setup() {
   // Get the parent div element
@@ -315,38 +356,23 @@ function draw() {
   clear();
   
   // Draw background
-  if (isVideo && backgroundVideo) {
-    // Draw video background
-    let scale = Math.max(width / backgroundVideo.width, height / backgroundVideo.height);
-    let w = backgroundVideo.width * scale;
-    let h = backgroundVideo.height * scale;
-    let x = (width - w) / 2;
-    let y = (height - h) / 2;
-    image(backgroundVideo, x, y, w, h);
-  } else if (backgroundImage) {
-    // Draw image background
-    let scale = Math.max(width / backgroundImage.width, height / backgroundImage.height);
-    let w = backgroundImage.width * scale;
-    let h = backgroundImage.height * scale;
-    let x = (width - w) / 2;
-    let y = (height - h) / 2;
-    image(backgroundImage, x, y, w, h);
-  } else {
-    // Draw color background using backgroundHandler's color
-    background(backgroundHandler.color);
-  }
+  backgroundHandler.draw();
 
   // Clear the PGraphics buffer
   pg.clear();
   pg.background(0, 0, 0, 0);
 
-  // Draw each element
-  E1.draw(pg);
-  E2.draw(pg);
-
-  // Apply tiling effect for each element
-  applyTilingEffect(E1);
-  applyTilingEffect(E2);
+  // Sort elements by z-index and draw
+  let elements = [E1, E2].sort((a, b) => a.zIndex - b.zIndex);
+  
+  // Add debug logging
+  console.log('Drawing elements:', elements.map(e => `${e.id} (z-index: ${e.zIndex})`));
+  
+  // Draw elements in order
+  elements.forEach(element => {
+    element.draw(pg);
+    applyTilingEffect(element);
+  });
 }
 
 function windowResized() {
@@ -395,6 +421,47 @@ function createSliders() {
   addSliderEventListener(tsE1, 'rangeValueE1S');
   addSliderEventListener(ttE1, 'rangeValueE1T', '%');
   addSliderEventListener(tlE1, 'rangeValueE1L', '%');
+
+  // Add E2 sliders setup
+  tXE2 = document.getElementById('rangeE2TX');
+  tYE2 = document.getElementById('rangeE2TY');
+  spE2 = document.getElementById('rangeE2Speed');
+  dspxE2 = document.getElementById('rangeE2DX');
+  dspyE2 = document.getElementById('rangeE2DY');
+  fctE2 = document.getElementById('rangeE2Offset');
+  
+  // Text position and style controls for E2
+  let tpxE2 = document.getElementById('rangeE2PX');
+  let tpyE2 = document.getElementById('rangeE2PY');
+  textScaleXE2 = document.getElementById('rangeE2SX');
+  textScaleYE2 = document.getElementById('rangeE2SY');
+  tsE2 = document.getElementById('rangeE2S');
+  ttE2 = document.getElementById('rangeE2T');
+  tlE2 = document.getElementById('rangeE2L');
+
+  // Initialize range value displays for E2
+  initializeRangeValue('rangeValueE2TX', tXE2);
+  initializeRangeValue('rangeValueE2TY', tYE2);
+  initializeRangeValue('rangeValueE2Speed', spE2);
+  initializeRangeValue('rangeValueE2DX', dspxE2);
+  initializeRangeValue('rangeValueE2DY', dspyE2);
+  initializeRangeValue('rangeValueE2Offset', fctE2);
+  initializeRangeValue('rangeValueE2PX', tpxE2);
+  initializeRangeValue('rangeValueE2PY', tpyE2);
+  initializeRangeValue('rangeValueE2SX', textScaleXE2);
+  initializeRangeValue('rangeValueE2SY', textScaleYE2);
+  initializeRangeValue('rangeValueE2S', tsE2);
+  initializeRangeValue('rangeValueE2T', ttE2, '%');
+  initializeRangeValue('rangeValueE2L', tlE2, '%');
+
+  // Add event listeners for E2 sliders
+  addSliderEventListener(tpxE2, 'rangeValueE2PX');
+  addSliderEventListener(tpyE2, 'rangeValueE2PY');
+  addSliderEventListener(textScaleXE2, 'rangeValueE2SX');
+  addSliderEventListener(textScaleYE2, 'rangeValueE2SY');
+  addSliderEventListener(tsE2, 'rangeValueE2S');
+  addSliderEventListener(ttE2, 'rangeValueE2T', '%');
+  addSliderEventListener(tlE2, 'rangeValueE2L', '%');
 }
 
 function addSliderEventListener(slider, valueId, suffix = '') {
@@ -635,3 +702,6 @@ function applyTilingEffect(element) {
     }
   }
 }
+
+E1.setZIndex(2); // Move E1 to top
+E2.setZIndex(1); // Move E2 to bottom
