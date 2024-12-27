@@ -109,6 +109,18 @@ let twE1;                // Text Weight
 let ttE1;                // Text Tracking
 let tlE1;                // Text Leading
 
+let audioStarted = false;
+
+function startAudio() {
+    if (!audioStarted) {
+        // Create or resume AudioContext after user gesture
+        if (getAudioContext().state !== 'running') {
+            getAudioContext().resume();
+        }
+        audioStarted = true;
+    }
+}
+
 function setup() {
   // Get the parent div element
   let outputDiv = document.getElementById('output');
@@ -179,6 +191,9 @@ function setup() {
   if (resetE1Button) {
     resetE1Button.addEventListener('click', resetE1);
   }
+
+  // Add click listener to canvas or document
+  document.addEventListener('click', startAudio);
 }
 
 function draw() {
