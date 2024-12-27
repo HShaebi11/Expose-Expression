@@ -405,46 +405,32 @@ function exportToSVG() {
 
 async function exportToMP4() {
   try {
-    // Check for MediaRecorder support and provide fallback for Safari
+    // Safari-specific check and warning
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    if (isSafari) {
+      alert('Video recording is not supported in Safari. Please use Chrome, Firefox, or Arc browser.');
+      return;
+    }
+
+    // Check for MediaRecorder support
     if (!window.MediaRecorder) {
-      if (navigator.userAgent.indexOf('Safari') != -1 && 
-          navigator.userAgent.indexOf('Chrome') == -1) {
-        throw new Error('Video recording is not supported in Safari. Please use Chrome or Firefox.');
-      }
       throw new Error('Your browser does not support video recording');
     }
 
-    // Check for canvas existence
     const canvas = document.querySelector('#defaultCanvas0');
     if (!canvas) {
       throw new Error('Canvas element not found');
     }
 
-    // Create timestamp for filename
-    const now = new Date();
-    const timestamp = [
-      now.getFullYear().toString(),
-      (now.getMonth() + 1).toString().padStart(2, '0'),
-      now.getDate().toString().padStart(2, '0'),
-      now.getHours().toString().padStart(2, '0'),
-      now.getMinutes().toString().padStart(2, '0'),
-      now.getSeconds().toString().padStart(2, '0')
-    ].join('-');
+    // Use more Safari-friendly settings
+    const mimeType = 'video/webm'; // Simplified MIME type
 
-    // Try to use the highest quality codec available
-    const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9') 
-      ? 'video/webm;codecs=vp9'
-      : MediaRecorder.isTypeSupported('video/webm;codecs=h264')
-        ? 'video/webm;codecs=h264'
-        : 'video/webm';
+    // Lower framerate for better compatibility
+    let stream = canvas.captureStream(30); // Reduced to 30fps
 
-    // Get stream with higher framerate
-    let stream = canvas.captureStream(60); // Increased to 60fps
-
-    // Create MediaRecorder with higher quality settings
     const mediaRecorder = new MediaRecorder(stream, {
       mimeType,
-      videoBitsPerSecond: 200000000 // Increased to 20Mbps
+      videoBitsPerSecond: 8000000 // Reduced to 8Mbps for better compatibility
     });
 
     const chunks = [];
