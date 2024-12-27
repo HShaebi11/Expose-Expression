@@ -178,7 +178,32 @@ let backgroundHandler = {
     let resetBG = document.getElementById('resetBG');
     if (resetBG) {
       resetBG.addEventListener('click', function() {
-        backgroundHandler.reset();
+        // Remove video if it exists
+        if (backgroundVideo) {
+          backgroundVideo.remove();
+          backgroundVideo = null;
+        }
+        
+        // Clear image
+        backgroundImage = null;
+        isVideo = false;
+        
+        // Reset to default color
+        colourBG = 220;
+        backgroundHandler.setBackground('#DCDCDC');
+        
+        // Reset color picker if it exists
+        let colorPicker = document.getElementById('colourBG');
+        if (colorPicker) {
+          colorPicker.value = '#DCDCDC';  // Default color in hex
+          colorPicker.style.backgroundColor = colorPicker.value;
+        }
+        
+        // Reset file input if it exists
+        let uploadBG = document.getElementById('uploadBG');
+        if (uploadBG) {
+          uploadBG.value = '';  // Clear the file input
+        }
       });
     }
   
@@ -206,8 +231,8 @@ let backgroundHandler = {
       let y = (height - h) / 2;
       image(backgroundImage, x, y, w, h);
     } else {
-      // Draw color background
-      background(colourBG);
+      // Draw color background using backgroundHandler's color
+      background(backgroundHandler.color);
     }
   
     // Clear the PGraphics buffer
@@ -453,23 +478,20 @@ let backgroundHandler = {
         now.getSeconds().toString().padStart(2, '0')
       ].join('-');
   
-      // Check browser support for specific codec
-      const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=h264') 
-        ? 'video/webm;codecs=h264'
-        : 'video/webm';
+      // Try to use the highest quality codec available
+      const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9') 
+        ? 'video/webm;codecs=vp9'
+        : MediaRecorder.isTypeSupported('video/webm;codecs=h264')
+          ? 'video/webm;codecs=h264'
+          : 'video/webm';
   
-      // Get stream with error handling
-      let stream;
-      try {
-        stream = canvas.captureStream(30);
-      } catch (err) {
-        throw new Error(`Failed to capture canvas stream: ${err.message}`);
-      }
+      // Get stream with higher framerate
+      let stream = canvas.captureStream(60); // Increased to 60fps
   
-      // Create MediaRecorder with supported options
+      // Create MediaRecorder with higher quality settings
       const mediaRecorder = new MediaRecorder(stream, {
         mimeType,
-        videoBitsPerSecond: 5000000
+        videoBitsPerSecond: 200000000 // Increased to 20Mbps
       });
   
       const chunks = [];
@@ -488,10 +510,11 @@ let backgroundHandler = {
   
         mediaRecorder.onstop = async () => {
           try {
-            const blob = new Blob(chunks, { type: 'video/webm' });
+            const blob = new Blob(chunks, { 
+              type: mimeType,
+            });
             const url = URL.createObjectURL(blob);
             
-            // Create and trigger download
             const a = document.createElement('a');
             a.style.display = 'none';
             a.href = url;
@@ -500,7 +523,6 @@ let backgroundHandler = {
             document.body.appendChild(a);
             a.click();
             
-            // Cleanup
             setTimeout(() => {
               document.body.removeChild(a);
               URL.revokeObjectURL(url);
@@ -514,12 +536,11 @@ let backgroundHandler = {
           }
         };
   
-        // UI handling functions
         const resetUI = () => {
           const recordButton = document.getElementById('exportMP4');
           if (recordButton) {
             recordButton.style.backgroundColor = '';
-            recordButton.textContent = 'Export MP4';
+            recordButton.textContent = 'VIDEO';
             recordButton.disabled = false;
           }
         };
@@ -533,21 +554,20 @@ let backgroundHandler = {
           }
         };
   
-        // Start recording
         try {
           updateUI();
-          mediaRecorder.start(100);
+          // Request data more frequently
+          mediaRecorder.start(20); // Reduced to 20ms intervals
           console.log('Recording started...');
   
-          // Stop recording after 3 seconds
+          // Record for longer duration
           setTimeout(() => {
             if (mediaRecorder.state === 'recording') {
               mediaRecorder.stop();
               console.log('Recording stopped');
             }
-          }, 3000);
+          }, 5000); // Increased to 5 seconds
   
-          // Cleanup handler
           const cleanupHandler = () => {
             if (mediaRecorder.state === 'recording') {
               mediaRecorder.stop();
