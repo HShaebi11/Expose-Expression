@@ -90,24 +90,64 @@ let isVideo = false;
 let font;
 let pg;
 
+class ElementHandler {
+  constructor(id) {
+    this.id = id;  // 'E1', 'E2', etc.
+    this.colour = 255; // Default white text
+    this.text = ''; // Variable to store the text
+    this.type = 'text'; // Can be 'text', 'svg', 'image', or 'video'
+    this.media = null;
+    
+    // GRID AND ANIMATION CONTROLS
+    this.controls = {
+      tX: null,     // Tile Count X
+      tY: null,     // Tile Count Y
+      sp: null,     // Speed
+      dspx: null,   // Displacement X
+      dspy: null,   // Displacement Y
+      fct: null,    // Factor/Offset
+      
+      // TEXT STYLE CONTROLS
+      textScaleX: null,
+      textScaleY: null,
+      ts: null,     // Text Size
+      tt: null,     // Text Tracking
+      tl: null      // Text Leading
+    };
+    
+    this.initializeControls();
+  }
 
-let E1Colour = 255; // Default white text
-let E1; // Variable to store the text
-let E1Type = 'text'; // Can be 'text', 'svg', 'image', or 'video'
-let E1Media = null;
+  initializeControls() {
+    // Initialize all controls using the ID prefix
+    this.controls.tX = document.getElementById(`range${this.id}TX`);
+    this.controls.tY = document.getElementById(`range${this.id}TY`);
+    this.controls.sp = document.getElementById(`range${this.id}Speed`);
+    this.controls.dspx = document.getElementById(`range${this.id}DX`);
+    this.controls.dspy = document.getElementById(`range${this.id}DY`);
+    this.controls.fct = document.getElementById(`range${this.id}Offset`);
+    this.controls.textScaleX = document.getElementById(`range${this.id}SX`);
+    this.controls.textScaleY = document.getElementById(`range${this.id}SY`);
+    this.controls.ts = document.getElementById(`range${this.id}S`);
+    this.controls.tt = document.getElementById(`range${this.id}T`);
+    this.controls.tl = document.getElementById(`range${this.id}L`);
+  }
 
-// GRID AND ANIMATION CONTROLS
-let tXE1, tYE1;    // Tile Count X & Y
-let spE1;            // Speed
-let dspxE1, dspyE1;    // Displacement X & Y
-let fctE1;           // Factor/Offset
+  draw(pg) {
+    // Clear the PGraphics buffer if needed
+    if (this.type === 'text') {
+      this.drawText(pg);
+    } else if (this.media) {
+      this.drawMedia(pg);
+    }
+  }
 
-// TEXT STYLE CONTROLS
-let textScaleXE1, textScaleYE1;    // Scale X & Y
-let tsE1;                // Text Size
-let twE1;                // Text Weight
-let ttE1;                // Text Tracking
-let tlE1;                // Text Leading
+  // ... rest of the methods
+}
+
+// Create instances for both elements
+let E1 = new ElementHandler('E1');
+let E2 = new ElementHandler('E2');
 
 function setup() {
   // Get the parent div element
@@ -154,34 +194,121 @@ function setup() {
     });
   }
 
-  // Text color setup
-  let colourE1 = document.getElementById('colourE1');
-  if (colourE1) {
-    colourE1.value = '#FFFFFF';
-    colourE1.style.backgroundColor = colourE1.value;
-    
-    colourE1.addEventListener('input', function() {
-      E1Colour = color(this.value);
-      this.style.backgroundColor = this.value;
-    });
-  }
+  // Text color setup for both elements
+  setupElementColor('E1');
+  setupElementColor('E2');
 
   setupExportButtons();
 
-  // Add upload button listener
-  let uploadE1Button = document.getElementById('uploadE1');
-  if (uploadE1Button) {
-    uploadE1Button.addEventListener('click', handleE1Upload);
-  }
-  
-  // Add reset button listener
-  let resetE1Button = document.getElementById('resetE1');
-  if (resetE1Button) {
-    resetE1Button.addEventListener('click', resetE1);
-  }
+  // Upload and reset buttons for both elements
+  setupElementButtons('E1');
+  setupElementButtons('E2');
 
   // Add click listener to canvas or document
   document.addEventListener('click', startAudio);
+}
+
+function setupElementColor(id) {
+  let colorPicker = document.getElementById(`colour${id}`);
+  if (colorPicker) {
+    colorPicker.value = '#FFFFFF';
+    colorPicker.style.backgroundColor = colorPicker.value;
+    
+    colorPicker.addEventListener('input', function() {
+      window[id].colour = color(this.value);
+      this.style.backgroundColor = this.value;
+    });
+  }
+}
+
+function setupElementButtons(id) {
+  // Add upload button listener
+  let uploadButton = document.getElementById(`upload${id}`);
+  if (uploadButton) {
+    uploadButton.addEventListener('click', () => handleElementUpload(window[id]));
+  }
+  
+  // Add reset button listener
+  let resetButton = document.getElementById(`reset${id}`);
+  if (resetButton) {
+    resetButton.addEventListener('click', () => resetElement(window[id]));
+  }
+}
+
+function handleElementUpload(element) {
+  let input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*,video/*,.svg';
+  
+  input.onchange = function(e) {
+    let file = e.target.files[0];
+    
+    if (file.name.toLowerCase().endsWith('.svg')) {
+      // Handle SVG
+      let reader = new FileReader();
+      reader.onload = function(event) {
+        loadImage(event.target.result, img => {
+          element.media = img;
+          element.type = 'svg';
+        });
+      };
+      reader.readAsDataURL(file);
+    } else if (file.type.startsWith('image/')) {
+      // Handle image
+      loadImage(URL.createObjectURL(file), img => {
+        element.media = img;
+        element.type = 'image';
+      });
+    } else if (file.type.startsWith('video/')) {
+      // Handle video
+      let video = createVideo(URL.createObjectURL(file), () => {
+        element.media = video;
+        element.type = 'video';
+        video.loop();
+        video.hide();
+      });
+    }
+    toggleElementControls(element);
+  };
+  
+  input.click();
+}
+
+function resetElement(element) {
+  // Clear media if it exists
+  if (element.media && element.type === 'video') {
+    element.media.remove();
+  }
+  element.media = null;
+  element.type = 'text';
+  
+  // Enable and show text area
+  let textArea = document.getElementById(`textArea${element.id}`);
+  if (textArea) {
+    textArea.disabled = false;
+    textArea.style.display = 'block';
+  }
+  
+  // Show all controls
+  toggleElementControls(element);
+}
+
+function toggleElementControls(element) {
+  const stylingControls = document.getElementById(`styling${element.id}`);
+  const colorControl = document.getElementById(`colourControl${element.id}`);
+  const textArea = document.getElementById(`textArea${element.id}`);
+  
+  if (stylingControls) {
+    stylingControls.style.display = element.type === 'text' ? 'block' : 'none';
+  }
+  
+  if (colorControl) {
+    colorControl.style.display = (element.type === 'text' || element.type === 'svg') ? 'block' : 'none';
+  }
+  
+  if (textArea) {
+    textArea.style.display = element.type === 'text' ? 'block' : 'none';
+  }
 }
 
 function draw() {
@@ -211,89 +338,15 @@ function draw() {
 
   // Clear the PGraphics buffer
   pg.clear();
-  pg.background(0, 0, 0, 0); // transparent background
-  
-  // Handle E1 drawing based on type
-  if (E1Type === 'text') {
-    pg.fill(E1Colour);
-    pg.textAlign(CENTER, CENTER);
-    E1 = document.getElementById('textAreaE1').value;
-    
-    // Apply text styling
-    pg.textSize(parseFloat(tsE1.value));
-    
-    pg.push();
-    pg.translate(
-      width/2 + parseFloat(document.getElementById('rangeE1PX').value) * 5, 
-      height/2 + parseFloat(document.getElementById('rangeE1PY').value) * 5
-    );
-    pg.scale(parseFloat(textScaleXE1.value), parseFloat(textScaleYE1.value));
-    
-    // Draw text with tracking and leading
-    if (E1) {
-      let chars = E1.split('');
-      let totalWidth = 0;
-      let tracking = parseFloat(ttE1.value) / 100;
-      let leading = parseFloat(tlE1.value) / 100;
-      
-      // Calculate total width with tracking
-      chars.forEach(char => {
-        totalWidth += pg.textWidth(char) * (1 + tracking);
-      });
-      
-      // Center the text
-      let xPos = -totalWidth / 2;
-      let yPos = 0;
-      
-      // Draw each character with tracking
-      chars.forEach(char => {
-        pg.text(char, xPos, yPos);
-        xPos += pg.textWidth(char) * (1 + tracking);
-        yPos += parseFloat(tsE1.value) * leading;  // Apply leading
-      });
-    }
-    
-    pg.pop();
-  } else if (E1Media) {
-    pg.push();
-    pg.translate(
-      width/2 + parseFloat(document.getElementById('rangeE1PX').value) * 5,
-      height/2 + parseFloat(document.getElementById('rangeE1PY').value) * 5
-    );
-    pg.scale(parseFloat(textScaleXE1.value), parseFloat(textScaleYE1.value));
-    
-    if (E1Type === 'svg') {
-      pg.tint(E1Colour);
-    }
-    
-    if (E1Type === 'video') {
-      pg.image(E1Media, -E1Media.width/2, -E1Media.height/2);
-    } else {
-      pg.image(E1Media, -E1Media.width/2, -E1Media.height/2);
-    }
-    
-    pg.pop();
-  }
+  pg.background(0, 0, 0, 0);
 
-  // Draw the tiled text effect
-  let tilesXE1 = parseInt(tXE1.value);
-  let tilesYE1 = parseInt(tYE1.value);
-  let tileWE1 = int(width/tilesXE1);
-  let tileHE1 = int(height/tilesYE1);
+  // Draw each element
+  E1.draw(pg);
+  E2.draw(pg);
 
-  for (let y = 0; y < tilesYE1; y++) {
-    for (let x = 0; x < tilesXE1; x++) {
-      let waveXE1 = int(sin(frameCount * parseFloat(spE1.value) + (x * y) * parseFloat(dspxE1.value)) * parseFloat(fctE1.value));
-      let waveYE1 = int(sin(frameCount * parseFloat(spE1.value) + (x * y) * parseFloat(dspyE1.value)) * parseFloat(fctE1.value));
-
-      if (parseFloat(dspxE1.value) === 0) waveXE1 = 0;
-      if (parseFloat(dspyE1.value) === 0) waveYE1 = 0;
-      
-      let sxE1 = x*tileWE1 + waveXE1;
-      let syE1 = y*tileHE1 + waveYE1;
-      copy(pg, sxE1, syE1, tileWE1, tileHE1, x*tileWE1, y*tileHE1, tileWE1, tileHE1);
-    }
-  }
+  // Apply tiling effect for each element
+  applyTilingEffect(E1);
+  applyTilingEffect(E2);
 }
 
 function windowResized() {
@@ -562,86 +615,23 @@ function handleBackgroundUpload() {
   input.click();
 }
 
-function handleE1Upload() {
-  let input = document.createElement('input');
-  input.type = 'file';
-  input.accept = 'image/*,video/*,.svg';
-  
-  input.onchange = function(e) {
-    let file = e.target.files[0];
-    
-    // Disable text input
-    let textArea = document.getElementById('textAreaE1');
-    if (textArea) {
-      textArea.disabled = true;
-    }
-    
-    if (file.name.toLowerCase().endsWith('.svg')) {
-      // Handle SVG
-      let reader = new FileReader();
-      reader.onload = function(event) {
-        loadImage(event.target.result, img => {
-          E1Media = img;
-          E1Type = 'svg';
-          toggleE1Controls('svg');
-        });
-      };
-      reader.readAsDataURL(file);
-    } else if (file.type.startsWith('image/')) {
-      // Handle image
-      loadImage(URL.createObjectURL(file), img => {
-        E1Media = img;
-        E1Type = 'image';
-        toggleE1Controls('image');
-      });
-    } else if (file.type.startsWith('video/')) {
-      // Handle video
-      let video = createVideo(URL.createObjectURL(file), () => {
-        E1Media = video;
-        E1Type = 'video';
-        video.loop();
-        video.hide();
-        toggleE1Controls('video');
-      });
-    }
-  };
-  
-  input.click();
-}
+function applyTilingEffect(element) {
+  let tilesX = parseInt(element.controls.tX.value);
+  let tilesY = parseInt(element.controls.tY.value);
+  let tileWE1 = int(width/tilesX);
+  let tileHE1 = int(height/tilesY);
 
-function toggleE1Controls(type) {
-  const stylingControls = document.getElementById('stylingE1');
-  const colorControl = document.getElementById('colourControlE1');
-  const textArea = document.getElementById('textAreaE1');
-  
-  if (stylingControls) {
-    stylingControls.style.display = type === 'text' ? 'block' : 'none';
-  }
-  
-  if (colorControl) {
-    colorControl.style.display = (type === 'text' || type === 'svg') ? 'block' : 'none';
-  }
-  
-  if (textArea) {
-    textArea.style.display = type === 'text' ? 'block' : 'none';
-  }
-}
+  for (let y = 0; y < tilesY; y++) {
+    for (let x = 0; x < tilesX; x++) {
+      let waveXE1 = int(sin(frameCount * parseFloat(element.controls.sp.value) + (x * y) * parseFloat(element.controls.dspx.value)) * parseFloat(element.controls.fct.value));
+      let waveYE1 = int(sin(frameCount * parseFloat(element.controls.sp.value) + (x * y) * parseFloat(element.controls.dspy.value)) * parseFloat(element.controls.fct.value));
 
-function resetE1() {
-  // Clear media if it exists
-  if (E1Media && E1Type === 'video') {
-    E1Media.remove();
+      if (parseFloat(element.controls.dspx.value) === 0) waveXE1 = 0;
+      if (parseFloat(element.controls.dspy.value) === 0) waveYE1 = 0;
+      
+      let sxE1 = x*tileWE1 + waveXE1;
+      let syE1 = y*tileHE1 + waveYE1;
+      copy(pg, sxE1, syE1, tileWE1, tileHE1, x*tileWE1, y*tileHE1, tileWE1, tileHE1);
+    }
   }
-  E1Media = null;
-  E1Type = 'text';
-  
-  // Enable and show text area
-  let textArea = document.getElementById('textAreaE1');
-  if (textArea) {
-    textArea.disabled = false;
-    textArea.style.display = 'block';
-  }
-  
-  // Show all controls
-  toggleE1Controls('text');
 }
