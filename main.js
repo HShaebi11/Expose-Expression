@@ -90,6 +90,11 @@ let isVideo = false;
 let font;
 let pg;
 
+// Define multiple canvases
+let backgroundCanvas;
+let mainCanvas;
+let overlayCanvas;
+
 class ElementHandler {
   constructor(id, zIndex = 0) {
     this.id = id;      // 'E1', 'E2', etc.
@@ -138,12 +143,11 @@ class ElementHandler {
     this.controls.tl = document.getElementById(`range${this.id}L`);
   }
 
-  draw(pg) {
-    // Clear the PGraphics buffer if needed
+  draw(targetCanvas) {
     if (this.type === 'text') {
-      this.drawText(pg);
+      this.drawText(targetCanvas);
     } else if (this.media) {
-      this.drawMedia(pg);
+      this.drawMedia(targetCanvas);
     }
   }
 
@@ -152,12 +156,12 @@ class ElementHandler {
     this.zIndex = index;
   }
 
-  drawText(pg) {
+  drawText(targetCanvas) {
     console.log(`Drawing ${this.id} with type ${this.type}`);
     // ... rest of drawText method ...
   }
 
-  drawMedia(pg) {
+  drawMedia(targetCanvas) {
     console.log(`Drawing ${this.id} media of type ${this.type}`);
     // ... rest of drawMedia method ...
   }
@@ -166,85 +170,54 @@ class ElementHandler {
 }
 
 // Create instances with z-index values
-let E1 = new ElementHandler('E1', 0); // Bottom layer
-let E2 = new ElementHandler('E2', 1); // Top layer
+let E1 = new ElementHandler('E1', 1);
 
 console.log('E1:', E1);
-console.log('E2:', E2);
 
 // Make them visually distinct
 E1.colour = color(255, 0, 0);  // Make E1 red
-E2.colour = color(0, 255, 0);  // Make E2 green
 
 // Set different z-indices to ensure they're both visible
 E1.setZIndex(1);
-E2.setZIndex(2);
 
 // Add some default text if none exists
 if (!E1.text) E1.text = "Element 1";
-if (!E2.text) E2.text = "Element 2";
 
 // Position them in different places
 E1.x = width / 3;
-E2.x = (width / 3) * 2;
 E1.y = height / 2;
-E2.y = height / 2;
 
 function setup() {
   // Get the parent div element
   let outputDiv = document.getElementById('output');
   
-  // Create canvas with the same dimensions as the parent div
-  let canvas = createCanvas(outputDiv.offsetWidth, outputDiv.offsetHeight);
+  // Create canvases with the same dimensions as the parent div
+  backgroundCanvas = createCanvas(outputDiv.offsetWidth, outputDiv.offsetHeight);
+  mainCanvas = createGraphics(outputDiv.offsetWidth, outputDiv.offsetHeight);
   
-  // Move the canvas inside the output div
-  canvas.parent('output');
+  // Set up canvas hierarchy
+  backgroundCanvas.parent('output');
+  backgroundCanvas.style('z-index', '1');
+  
+  mainCanvas.parent('output');
+  mainCanvas.style('z-index', '2');
+  mainCanvas.position(0, 0);
   
   // Optional: Add window resize handling
   window.addEventListener('resize', function() {
     resizeCanvas(outputDiv.offsetWidth, outputDiv.offsetHeight);
+    mainCanvas.resizeCanvas(outputDiv.offsetWidth, outputDiv.offsetHeight);
   });
 
-  // Initialize PGraphics and sliders
+  // Initialize PGraphics
   pg = createGraphics(width, height);
-  createSliders();
-
-  // Background controls setup
-  let colourBG = document.getElementById('colourBG');
-  if (colourBG) {
-    colourBG.value = '#DCDCDC';
-    colourBG.style.backgroundColor = colourBG.value;
-    
-    colourBG.addEventListener('input', function() {
-      backgroundHandler.setBackground(this.value);
-      this.style.backgroundColor = this.value;
-    });
-  }
-
-  // Background upload setup
-  let uploadBG = document.getElementById('uploadBG');
-  if (uploadBG) {
-    uploadBG.addEventListener('click', handleBackgroundUpload);
-  }
-
-  // Reset background button setup
-  let resetBG = document.getElementById('resetBG');
-  if (resetBG) {
-    resetBG.addEventListener('click', function() {
-      backgroundHandler.reset();
-    });
-  }
-
-  // Text color setup for both elements
+  
+  // Setup for E1 only
   setupElementColor('E1');
-  setupElementColor('E2');
-
-  setupExportButtons();
-
-  // Upload and reset buttons for both elements
   setupElementButtons('E1');
-  setupElementButtons('E2');
-
+  
+  setupExportButtons();
+  
   // Add click listener to canvas or document
   document.addEventListener('click', startAudio);
 }
@@ -353,35 +326,30 @@ function toggleElementControls(element) {
 }
 
 function draw() {
+  // Clear canvas
   clear();
   
   // Draw background
   backgroundHandler.draw();
 
-  // Clear the PGraphics buffer
-  pg.clear();
-  pg.background(0, 0, 0, 0);
+  // Draw only E1
+  mainCanvas.push();
+  E1.draw(mainCanvas);
+  applyTilingEffect(E1, mainCanvas);
+  mainCanvas.pop();
 
-  // Sort elements by z-index and draw
-  let elements = [E1, E2].sort((a, b) => a.zIndex - b.zIndex);
-  
-  // Add debug logging
-  console.log('Drawing elements:', elements.map(e => `${e.id} (z-index: ${e.zIndex})`));
-  
-  // Draw elements in order
-  elements.forEach(element => {
-    element.draw(pg);
-    applyTilingEffect(element);
-  });
+  // Display the canvas
+  image(mainCanvas, 0, 0);
 }
 
 function windowResized() {
   let outputDiv = document.getElementById('output');
   resizeCanvas(outputDiv.offsetWidth, outputDiv.offsetHeight);
+  mainCanvas.resizeCanvas(outputDiv.offsetWidth, outputDiv.offsetHeight);
 }
 
 function createSliders() {
-  // Get all range inputs
+  // Keep only E1 sliders
   tXE1 = document.getElementById('rangeE1TX');
   tYE1 = document.getElementById('rangeE1TY');
   spE1 = document.getElementById('rangeE1Speed');
@@ -413,7 +381,7 @@ function createSliders() {
   initializeRangeValue('rangeValueE1T', ttE1, '%');
   initializeRangeValue('rangeValueE1L', tlE1, '%');
 
-  // Add event listeners for all sliders
+  // Add event listeners for sliders
   addSliderEventListener(tpxE1, 'rangeValueE1PX');
   addSliderEventListener(tpyE1, 'rangeValueE1PY');
   addSliderEventListener(textScaleXE1, 'rangeValueE1SX');
@@ -421,47 +389,6 @@ function createSliders() {
   addSliderEventListener(tsE1, 'rangeValueE1S');
   addSliderEventListener(ttE1, 'rangeValueE1T', '%');
   addSliderEventListener(tlE1, 'rangeValueE1L', '%');
-
-  // Add E2 sliders setup
-  tXE2 = document.getElementById('rangeE2TX');
-  tYE2 = document.getElementById('rangeE2TY');
-  spE2 = document.getElementById('rangeE2Speed');
-  dspxE2 = document.getElementById('rangeE2DX');
-  dspyE2 = document.getElementById('rangeE2DY');
-  fctE2 = document.getElementById('rangeE2Offset');
-  
-  // Text position and style controls for E2
-  let tpxE2 = document.getElementById('rangeE2PX');
-  let tpyE2 = document.getElementById('rangeE2PY');
-  textScaleXE2 = document.getElementById('rangeE2SX');
-  textScaleYE2 = document.getElementById('rangeE2SY');
-  tsE2 = document.getElementById('rangeE2S');
-  ttE2 = document.getElementById('rangeE2T');
-  tlE2 = document.getElementById('rangeE2L');
-
-  // Initialize range value displays for E2
-  initializeRangeValue('rangeValueE2TX', tXE2);
-  initializeRangeValue('rangeValueE2TY', tYE2);
-  initializeRangeValue('rangeValueE2Speed', spE2);
-  initializeRangeValue('rangeValueE2DX', dspxE2);
-  initializeRangeValue('rangeValueE2DY', dspyE2);
-  initializeRangeValue('rangeValueE2Offset', fctE2);
-  initializeRangeValue('rangeValueE2PX', tpxE2);
-  initializeRangeValue('rangeValueE2PY', tpyE2);
-  initializeRangeValue('rangeValueE2SX', textScaleXE2);
-  initializeRangeValue('rangeValueE2SY', textScaleYE2);
-  initializeRangeValue('rangeValueE2S', tsE2);
-  initializeRangeValue('rangeValueE2T', ttE2, '%');
-  initializeRangeValue('rangeValueE2L', tlE2, '%');
-
-  // Add event listeners for E2 sliders
-  addSliderEventListener(tpxE2, 'rangeValueE2PX');
-  addSliderEventListener(tpyE2, 'rangeValueE2PY');
-  addSliderEventListener(textScaleXE2, 'rangeValueE2SX');
-  addSliderEventListener(textScaleYE2, 'rangeValueE2SY');
-  addSliderEventListener(tsE2, 'rangeValueE2S');
-  addSliderEventListener(ttE2, 'rangeValueE2T', '%');
-  addSliderEventListener(tlE2, 'rangeValueE2L', '%');
 }
 
 function addSliderEventListener(slider, valueId, suffix = '') {
@@ -682,26 +609,27 @@ function handleBackgroundUpload() {
   input.click();
 }
 
-function applyTilingEffect(element) {
+function applyTilingEffect(element, targetCanvas) {
   let tilesX = parseInt(element.controls.tX.value);
   let tilesY = parseInt(element.controls.tY.value);
-  let tileWE1 = int(width/tilesX);
-  let tileHE1 = int(height/tilesY);
+  let tileW = int(width/tilesX);
+  let tileH = int(height/tilesY);
 
   for (let y = 0; y < tilesY; y++) {
     for (let x = 0; x < tilesX; x++) {
-      let waveXE1 = int(sin(frameCount * parseFloat(element.controls.sp.value) + (x * y) * parseFloat(element.controls.dspx.value)) * parseFloat(element.controls.fct.value));
-      let waveYE1 = int(sin(frameCount * parseFloat(element.controls.sp.value) + (x * y) * parseFloat(element.controls.dspy.value)) * parseFloat(element.controls.fct.value));
+      let waveX = int(sin(frameCount * parseFloat(element.controls.sp.value) + 
+                         (x * y) * parseFloat(element.controls.dspx.value)) * 
+                         parseFloat(element.controls.fct.value));
+      let waveY = int(sin(frameCount * parseFloat(element.controls.sp.value) + 
+                         (x * y) * parseFloat(element.controls.dspy.value)) * 
+                         parseFloat(element.controls.fct.value));
 
-      if (parseFloat(element.controls.dspx.value) === 0) waveXE1 = 0;
-      if (parseFloat(element.controls.dspy.value) === 0) waveYE1 = 0;
+      if (parseFloat(element.controls.dspx.value) === 0) waveX = 0;
+      if (parseFloat(element.controls.dspy.value) === 0) waveY = 0;
       
-      let sxE1 = x*tileWE1 + waveXE1;
-      let syE1 = y*tileHE1 + waveYE1;
-      copy(pg, sxE1, syE1, tileWE1, tileHE1, x*tileWE1, y*tileHE1, tileWE1, tileHE1);
+      let sx = x*tileW + waveX;
+      let sy = y*tileH + waveY;
+      targetCanvas.copy(pg, sx, sy, tileW, tileH, x*tileW, y*tileH, tileW, tileH);
     }
   }
 }
-
-E1.setZIndex(2); // Move E1 to top
-E2.setZIndex(1); // Move E2 to bottom
