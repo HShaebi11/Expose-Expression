@@ -90,23 +90,13 @@ let isVideo = false;
 let font;
 let pg;
 
-// Define multiple canvases
-let backgroundCanvas;
-let mainCanvas;
-let overlayCanvas;
-
 class ElementHandler {
-  constructor(id, zIndex = 0) {
-    this.id = id;      // 'E1', 'E2', etc.
-    this.zIndex = zIndex;  // New property for stacking order
+  constructor(id) {
+    this.id = id;  // 'E1', 'E2', etc.
     this.colour = 255; // Default white text
-    this.text = '';    // Variable to store the text
+    this.text = ''; // Variable to store the text
     this.type = 'text'; // Can be 'text', 'svg', 'image', or 'video'
     this.media = null;
-    
-    // Position properties
-    this.x = 0;
-    this.y = 0;
     
     // GRID AND ANIMATION CONTROLS
     this.controls = {
@@ -143,81 +133,77 @@ class ElementHandler {
     this.controls.tl = document.getElementById(`range${this.id}L`);
   }
 
-  draw(targetCanvas) {
+  draw(pg) {
+    // Clear the PGraphics buffer if needed
     if (this.type === 'text') {
-      this.drawText(targetCanvas);
+      this.drawText(pg);
     } else if (this.media) {
-      this.drawMedia(targetCanvas);
+      this.drawMedia(pg);
     }
-  }
-
-  // Add method to change z-index
-  setZIndex(index) {
-    this.zIndex = index;
-  }
-
-  drawText(targetCanvas) {
-    console.log(`Drawing ${this.id} with type ${this.type}`);
-    // ... rest of drawText method ...
-  }
-
-  drawMedia(targetCanvas) {
-    console.log(`Drawing ${this.id} media of type ${this.type}`);
-    // ... rest of drawMedia method ...
   }
 
   // ... rest of the methods
 }
 
-// Create instances with z-index values
-let E1 = new ElementHandler('E1', 1);
-
-console.log('E1:', E1);
-
-// Make them visually distinct
-E1.colour = color(255, 0, 0);  // Make E1 red
-
-// Set different z-indices to ensure they're both visible
-E1.setZIndex(1);
-
-// Add some default text if none exists
-if (!E1.text) E1.text = "Element 1";
-
-// Position them in different places
-E1.x = width / 3;
-E1.y = height / 2;
+// Create instances for both elements
+let E1 = new ElementHandler('E1');
+let E2 = new ElementHandler('E2');
 
 function setup() {
   // Get the parent div element
   let outputDiv = document.getElementById('output');
   
-  // Create canvases with the same dimensions as the parent div
-  backgroundCanvas = createCanvas(outputDiv.offsetWidth, outputDiv.offsetHeight);
-  mainCanvas = createGraphics(outputDiv.offsetWidth, outputDiv.offsetHeight);
+  // Create canvas with the same dimensions as the parent div
+  let canvas = createCanvas(outputDiv.offsetWidth, outputDiv.offsetHeight);
   
-  // Set up canvas hierarchy
-  backgroundCanvas.parent('output');
-  backgroundCanvas.style('z-index', '1');
-  
-  mainCanvas.parent('output');
-  mainCanvas.style('z-index', '2');
-  mainCanvas.position(0, 0);
+  // Move the canvas inside the output div
+  canvas.parent('output');
   
   // Optional: Add window resize handling
   window.addEventListener('resize', function() {
     resizeCanvas(outputDiv.offsetWidth, outputDiv.offsetHeight);
-    mainCanvas.resizeCanvas(outputDiv.offsetWidth, outputDiv.offsetHeight);
   });
 
-  // Initialize PGraphics
+  // Initialize PGraphics and sliders
   pg = createGraphics(width, height);
-  
-  // Setup for E1 only
+  createSliders();
+
+  // Background controls setup
+  let colourBG = document.getElementById('colourBG');
+  if (colourBG) {
+    colourBG.value = '#DCDCDC';
+    colourBG.style.backgroundColor = colourBG.value;
+    
+    colourBG.addEventListener('input', function() {
+      backgroundHandler.setBackground(this.value);
+      this.style.backgroundColor = this.value;
+    });
+  }
+
+  // Background upload setup
+  let uploadBG = document.getElementById('uploadBG');
+  if (uploadBG) {
+    uploadBG.addEventListener('click', handleBackgroundUpload);
+  }
+
+  // Reset background button setup
+  let resetBG = document.getElementById('resetBG');
+  if (resetBG) {
+    resetBG.addEventListener('click', function() {
+      backgroundHandler.reset();
+    });
+  }
+
+  // Text color setup for both elements
   setupElementColor('E1');
-  setupElementButtons('E1');
-  
+  setupElementColor('E2');
+
   setupExportButtons();
-  
+
+  // Upload and reset buttons for both elements
+  setupElementButtons('E1');
+  setupElementButtons('E2');
+
   // Add click listener to canvas or document
   document.addEventListener('click', startAudio);
 }
@@ -326,30 +312,50 @@ function toggleElementControls(element) {
 }
 
 function draw() {
-  // Clear canvas
   clear();
   
   // Draw background
-  backgroundHandler.draw();
+  if (isVideo && backgroundVideo) {
+    // Draw video background
+    let scale = Math.max(width / backgroundVideo.width, height / backgroundVideo.height);
+    let w = backgroundVideo.width * scale;
+    let h = backgroundVideo.height * scale;
+    let x = (width - w) / 2;
+    let y = (height - h) / 2;
+    image(backgroundVideo, x, y, w, h);
+  } else if (backgroundImage) {
+    // Draw image background
+    let scale = Math.max(width / backgroundImage.width, height / backgroundImage.height);
+    let w = backgroundImage.width * scale;
+    let h = backgroundImage.height * scale;
+    let x = (width - w) / 2;
+    let y = (height - h) / 2;
+    image(backgroundImage, x, y, w, h);
+  } else {
+    // Draw color background using backgroundHandler's color
+    background(backgroundHandler.color);
+  }
 
-  // Draw only E1
-  mainCanvas.push();
-  E1.draw(mainCanvas);
-  applyTilingEffect(E1, mainCanvas);
-  mainCanvas.pop();
+  // Clear the PGraphics buffer
+  pg.clear();
+  pg.background(0, 0, 0, 0);
 
-  // Display the canvas
-  image(mainCanvas, 0, 0);
+  // Draw each element
+  E1.draw(pg);
+  E2.draw(pg);
+
+  // Apply tiling effect for each element
+  applyTilingEffect(E1);
+  applyTilingEffect(E2);
 }
 
 function windowResized() {
   let outputDiv = document.getElementById('output');
   resizeCanvas(outputDiv.offsetWidth, outputDiv.offsetHeight);
-  mainCanvas.resizeCanvas(outputDiv.offsetWidth, outputDiv.offsetHeight);
 }
 
 function createSliders() {
-  // Keep only E1 sliders
+  // Get all range inputs
   tXE1 = document.getElementById('rangeE1TX');
   tYE1 = document.getElementById('rangeE1TY');
   spE1 = document.getElementById('rangeE1Speed');
@@ -381,7 +387,7 @@ function createSliders() {
   initializeRangeValue('rangeValueE1T', ttE1, '%');
   initializeRangeValue('rangeValueE1L', tlE1, '%');
 
-  // Add event listeners for sliders
+  // Add event listeners for all sliders
   addSliderEventListener(tpxE1, 'rangeValueE1PX');
   addSliderEventListener(tpyE1, 'rangeValueE1PY');
   addSliderEventListener(textScaleXE1, 'rangeValueE1SX');
@@ -609,27 +615,23 @@ function handleBackgroundUpload() {
   input.click();
 }
 
-function applyTilingEffect(element, targetCanvas) {
+function applyTilingEffect(element) {
   let tilesX = parseInt(element.controls.tX.value);
   let tilesY = parseInt(element.controls.tY.value);
-  let tileW = int(width/tilesX);
-  let tileH = int(height/tilesY);
+  let tileWE1 = int(width/tilesX);
+  let tileHE1 = int(height/tilesY);
 
   for (let y = 0; y < tilesY; y++) {
     for (let x = 0; x < tilesX; x++) {
-      let waveX = int(sin(frameCount * parseFloat(element.controls.sp.value) + 
-                         (x * y) * parseFloat(element.controls.dspx.value)) * 
-                         parseFloat(element.controls.fct.value));
-      let waveY = int(sin(frameCount * parseFloat(element.controls.sp.value) + 
-                         (x * y) * parseFloat(element.controls.dspy.value)) * 
-                         parseFloat(element.controls.fct.value));
+      let waveXE1 = int(sin(frameCount * parseFloat(element.controls.sp.value) + (x * y) * parseFloat(element.controls.dspx.value)) * parseFloat(element.controls.fct.value));
+      let waveYE1 = int(sin(frameCount * parseFloat(element.controls.sp.value) + (x * y) * parseFloat(element.controls.dspy.value)) * parseFloat(element.controls.fct.value));
 
-      if (parseFloat(element.controls.dspx.value) === 0) waveX = 0;
-      if (parseFloat(element.controls.dspy.value) === 0) waveY = 0;
+      if (parseFloat(element.controls.dspx.value) === 0) waveXE1 = 0;
+      if (parseFloat(element.controls.dspy.value) === 0) waveYE1 = 0;
       
-      let sx = x*tileW + waveX;
-      let sy = y*tileH + waveY;
-      targetCanvas.copy(pg, sx, sy, tileW, tileH, x*tileW, y*tileH, tileW, tileH);
+      let sxE1 = x*tileWE1 + waveXE1;
+      let syE1 = y*tileHE1 + waveYE1;
+      copy(pg, sxE1, syE1, tileWE1, tileHE1, x*tileWE1, y*tileHE1, tileWE1, tileHE1);
     }
   }
 }
