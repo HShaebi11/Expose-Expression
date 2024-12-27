@@ -91,8 +91,10 @@ let font;
 let pg;
 
 
-let textE1Colour = 255; // Default white text
-let textE1; // Variable to store the text
+let E1Colour = 255; // Default white text
+let E1; // Variable to store the text
+let E1Type = 'text'; // Can be 'text', 'svg', 'image', or 'video'
+let E1Media = null;
 
 // GRID AND ANIMATION CONTROLS
 let tXE1, tYE1;    // Tile Count X & Y
@@ -159,12 +161,24 @@ function setup() {
     colourE1.style.backgroundColor = colourE1.value;
     
     colourE1.addEventListener('input', function() {
-      textE1Colour = color(this.value);
+      E1Colour = color(this.value);
       this.style.backgroundColor = this.value;
     });
   }
 
   setupExportButtons();
+
+  // Add upload button listener
+  let uploadE1Button = document.getElementById('uploadE1');
+  if (uploadE1Button) {
+    uploadE1Button.addEventListener('click', handleE1Upload);
+  }
+  
+  // Add reset button listener
+  let resetE1Button = document.getElementById('resetE1');
+  if (resetE1Button) {
+    resetE1Button.addEventListener('click', resetE1);
+  }
 }
 
 function draw() {
@@ -195,47 +209,68 @@ function draw() {
   // Clear the PGraphics buffer
   pg.clear();
   pg.background(0, 0, 0, 0); // transparent background
-  pg.fill(textE1Colour);
-  pg.textAlign(CENTER, CENTER);
   
-  // Get text from textarea
-  textE1 = document.getElementById('textAreaE1').value;
-  
-  // Apply text styling
-  pg.textSize(parseFloat(tsE1.value));
-  
-  pg.push();
-  pg.translate(
-    width/2 + parseFloat(document.getElementById('rangeE1PX').value) * 5, 
-    height/2 + parseFloat(document.getElementById('rangeE1PY').value) * 5
-  );
-  pg.scale(parseFloat(textScaleXE1.value), parseFloat(textScaleYE1.value));
-  
-  // Draw text with tracking and leading
-  if (textE1) {
-    let chars = textE1.split('');
-    let totalWidth = 0;
-    let tracking = parseFloat(ttE1.value) / 100;
-    let leading = parseFloat(tlE1.value) / 100;
+  // Handle E1 drawing based on type
+  if (E1Type === 'text') {
+    pg.fill(E1Colour);
+    pg.textAlign(CENTER, CENTER);
+    E1 = document.getElementById('textAreaE1').value;
     
-    // Calculate total width with tracking
-    chars.forEach(char => {
-      totalWidth += pg.textWidth(char) * (1 + tracking);
-    });
+    // Apply text styling
+    pg.textSize(parseFloat(tsE1.value));
     
-    // Center the text
-    let xPos = -totalWidth / 2;
-    let yPos = 0;
+    pg.push();
+    pg.translate(
+      width/2 + parseFloat(document.getElementById('rangeE1PX').value) * 5, 
+      height/2 + parseFloat(document.getElementById('rangeE1PY').value) * 5
+    );
+    pg.scale(parseFloat(textScaleXE1.value), parseFloat(textScaleYE1.value));
     
-    // Draw each character with tracking
-    chars.forEach(char => {
-      pg.text(char, xPos, yPos);
-      xPos += pg.textWidth(char) * (1 + tracking);
-      yPos += parseFloat(tsE1.value) * leading;  // Apply leading
-    });
+    // Draw text with tracking and leading
+    if (E1) {
+      let chars = E1.split('');
+      let totalWidth = 0;
+      let tracking = parseFloat(ttE1.value) / 100;
+      let leading = parseFloat(tlE1.value) / 100;
+      
+      // Calculate total width with tracking
+      chars.forEach(char => {
+        totalWidth += pg.textWidth(char) * (1 + tracking);
+      });
+      
+      // Center the text
+      let xPos = -totalWidth / 2;
+      let yPos = 0;
+      
+      // Draw each character with tracking
+      chars.forEach(char => {
+        pg.text(char, xPos, yPos);
+        xPos += pg.textWidth(char) * (1 + tracking);
+        yPos += parseFloat(tsE1.value) * leading;  // Apply leading
+      });
+    }
+    
+    pg.pop();
+  } else if (E1Media) {
+    pg.push();
+    pg.translate(
+      width/2 + parseFloat(document.getElementById('rangeE1PX').value) * 5,
+      height/2 + parseFloat(document.getElementById('rangeE1PY').value) * 5
+    );
+    pg.scale(parseFloat(textScaleXE1.value), parseFloat(textScaleYE1.value));
+    
+    if (E1Type === 'svg') {
+      pg.tint(E1Colour);
+    }
+    
+    if (E1Type === 'video') {
+      pg.image(E1Media, -E1Media.width/2, -E1Media.height/2);
+    } else {
+      pg.image(E1Media, -E1Media.width/2, -E1Media.height/2);
+    }
+    
+    pg.pop();
   }
-  
-  pg.pop();
 
   // Draw the tiled text effect
   let tilesXE1 = parseInt(tXE1.value);
@@ -522,4 +557,88 @@ function handleBackgroundUpload() {
   };
   
   input.click();
+}
+
+function handleE1Upload() {
+  let input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*,video/*,.svg';
+  
+  input.onchange = function(e) {
+    let file = e.target.files[0];
+    
+    // Disable text input
+    let textArea = document.getElementById('textAreaE1');
+    if (textArea) {
+      textArea.disabled = true;
+    }
+    
+    if (file.name.toLowerCase().endsWith('.svg')) {
+      // Handle SVG
+      let reader = new FileReader();
+      reader.onload = function(event) {
+        loadImage(event.target.result, img => {
+          E1Media = img;
+          E1Type = 'svg';
+          toggleE1Controls('svg');
+        });
+      };
+      reader.readAsDataURL(file);
+    } else if (file.type.startsWith('image/')) {
+      // Handle image
+      loadImage(URL.createObjectURL(file), img => {
+        E1Media = img;
+        E1Type = 'image';
+        toggleE1Controls('image');
+      });
+    } else if (file.type.startsWith('video/')) {
+      // Handle video
+      let video = createVideo(URL.createObjectURL(file), () => {
+        E1Media = video;
+        E1Type = 'video';
+        video.loop();
+        video.hide();
+        toggleE1Controls('video');
+      });
+    }
+  };
+  
+  input.click();
+}
+
+function toggleE1Controls(type) {
+  const stylingControls = document.getElementById('stylingE1');
+  const colorControl = document.getElementById('colourControlE1');
+  const textArea = document.getElementById('textAreaE1');
+  
+  if (stylingControls) {
+    stylingControls.style.display = type === 'text' ? 'block' : 'none';
+  }
+  
+  if (colorControl) {
+    colorControl.style.display = (type === 'text' || type === 'svg') ? 'block' : 'none';
+  }
+  
+  if (textArea) {
+    textArea.style.display = type === 'text' ? 'block' : 'none';
+  }
+}
+
+function resetE1() {
+  // Clear media if it exists
+  if (E1Media && E1Type === 'video') {
+    E1Media.remove();
+  }
+  E1Media = null;
+  E1Type = 'text';
+  
+  // Enable and show text area
+  let textArea = document.getElementById('textAreaE1');
+  if (textArea) {
+    textArea.disabled = false;
+    textArea.style.display = 'block';
+  }
+  
+  // Show all controls
+  toggleE1Controls('text');
 }
