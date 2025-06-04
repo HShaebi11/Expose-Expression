@@ -1,101 +1,131 @@
 let backgroundHandler = {
     type: 'color',  // 'color', 'image', or 'video'
-    color: 220,
-    defaultColor: 220,
-    image: null,
-    video: null,
+    color: '#ffffff',
+    media: null,
+    element: document.getElementById('output'),
     
-    // Method to draw the current background
-    draw: function() {
-      switch(this.type) {
-        case 'video':
-          if (this.video) {
-            this.drawMedia(this.video);
-          }
-          break;
-        case 'image':
-          if (this.image) {
-            this.drawMedia(this.image);
-          }
-          break;
-        default:
-          background(this.color);
-      }
-    },
-  
-    // Helper method for drawing media with proper scaling
-    drawMedia: function(media) {
-      let scale = Math.max(width / media.width, height / media.height);
-      let w = media.width * scale;
-      let h = media.height * scale;
-      let x = (width - w) / 2;
-      let y = (height - h) / 2;
-      image(media, x, y, w, h);
-    },
-  
-    // Method to update background
-    setBackground: function(input) {
-      if (typeof input === 'string') {  // Color string
-        this.type = 'color';
-        this.color = color(input);
-      } else if (input instanceof p5.Image) {
-        this.type = 'image';
-        this.image = input;
-      } else if (input instanceof p5.MediaElement) {
-        this.type = 'video';
-        if (this.video) {
-          this.video.remove();
+    init() {
+        // Initialize color picker
+        const colorPicker = document.getElementById('colourBG');
+        if (colorPicker) {
+            colorPicker.value = this.color;
+            colorPicker.addEventListener('input', (e) => {
+                this.color = e.target.value;
+                this.update();
+            });
         }
-        this.video = input;
-        this.video.loop();
-        this.video.hide();
-        this.video.volume(0);
-      }
+
+        // Initialize media upload
+        const uploadBtn = document.getElementById('uploadBG');
+        const resetBtn = document.getElementById('resetBG');
+        
+        if (uploadBtn) {
+            uploadBtn.addEventListener('click', () => {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = 'image/*,video/*';
+                input.onchange = (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        if (file.type.startsWith('image/')) {
+                            loadImage(URL.createObjectURL(file), img => {
+                                this.media = img;
+                                this.type = 'image';
+                                this.update();
+                            });
+                        } else if (file.type.startsWith('video/')) {
+                            const video = createVideo(URL.createObjectURL(file), () => {
+                                this.media = video;
+                                this.type = 'video';
+                                video.elt.playsInline = true;
+                                video.elt.muted = true;
+                                video.loop();
+                                video.hide();
+                                this.update();
+                            });
+                        }
+                    }
+                };
+                input.click();
+            });
+        }
+
+        if (resetBtn) {
+            resetBtn.addEventListener('click', () => {
+                if (this.media && this.type === 'video') {
+                    this.media.remove();
+                }
+                this.media = null;
+                this.type = 'color';
+                this.update();
+                if (colorPicker) colorPicker.value = this.color;
+            });
+        }
+
+        this.update();
     },
-  
-    // Add reset method
-    reset: function() {
-      // Remove video if it exists
-      if (this.video) {
-        this.video.remove();
-        this.video = null;
-      }
-      
-      // Clear image
-      this.image = null;
-      
-      // Reset to default color
-      this.type = 'color';
-      this.color = this.defaultColor;
-      
-      // Reset color picker if it exists
-      let colorPicker = document.getElementById('colourBG');
-      if (colorPicker) {
-        colorPicker.value = '#DCDCDC';  // Default color in hex
-        colorPicker.style.backgroundColor = colorPicker.value;
-      }
-      
-      // Reset file input if it exists
-      let uploadBG = document.getElementById('uploadBG');
-      if (uploadBG) {
-        uploadBG.value = '';  // Clear the file input
-      }
+
+    update() {
+        if (!this.element) return;
+
+        // Clear existing background
+        this.element.style.background = '';
+        this.element.style.backgroundImage = '';
+        this.element.innerHTML = '';
+
+        switch (this.type) {
+            case 'color':
+                this.element.style.backgroundColor = this.color;
+                break;
+            case 'image':
+                if (this.media) {
+                    image(this.media, 0, 0, width, height);
+                }
+                break;
+            case 'video':
+                if (this.media) {
+                    image(this.media, 0, 0, width, height);
+                }
+                break;
+        }
+    },
+
+    draw() {
+        switch (this.type) {
+            case 'color':
+                background(this.color);
+                break;
+            case 'image':
+            case 'video':
+                if (this.media) {
+                    image(this.media, 0, 0, width, height);
+                }
+                break;
+        }
     }
-  };
-  
-  let colourBG = 220;
-  let backgroundImage = null;
-  let backgroundVideo = null;
-  let isVideo = false;
-  let font;
-  let pg;
-  let tX, tY, sp, dspx, dspy, fct;
-  let colourText = 255; // Default white text
-  let tpx, tpy;
-  let tsx, tsy;
-  let ts, tw, tt, tl;  // New control variables
-  
-  function setup() {
+};
+
+let E1Colour = 255; // Default white text
+let E1; // Variable to store the text
+let E1Type = 'text'; // Can be 'text', 'svg', 'image', or 'video'
+let E1Media = null;
+
+// GRID AND ANIMATION CONTROLS
+let tXE1, tYE1;    // Tile Count X & Y
+let spE1;          // Speed
+let dspxE1, dspyE1;  // Displacement X & Y
+let fctE1;         // Factor/Offset
+
+// TEXT STYLE CONTROLS
+let textScaleXE1, textScaleYE1;  // Scale X & Y
+let tsE1;          // Text Size
+let twE1;          // Text Weight
+let ttE1;          // Text Tracking
+let tlE1;          // Text Leading
+
+let pg;
+
+function setup() {
     // Get the parent div element
     let outputDiv = document.getElementById('output');
     
@@ -107,308 +137,222 @@ let backgroundHandler = {
     
     // Optional: Add window resize handling
     window.addEventListener('resize', function() {
-      resizeCanvas(outputDiv.offsetWidth, outputDiv.offsetHeight);
+        resizeCanvas(outputDiv.offsetWidth, outputDiv.offsetHeight);
     });
-  
+
     // Initialize PGraphics and sliders
     pg = createGraphics(width, height);
     createSliders();
-  
+
+    // Background controls setup
+    let colourBG = document.getElementById('colourBG');
+    if (colourBG) {
+        colourBG.value = '#DCDCDC';
+        colourBG.style.backgroundColor = colourBG.value;
+        
+        colourBG.addEventListener('input', function() {
+            backgroundHandler.setBackground(this.value);
+            this.style.backgroundColor = this.value;
+        });
+    }
+
     // Background upload setup
     let uploadBG = document.getElementById('uploadBG');
     if (uploadBG) {
-      uploadBG.addEventListener('click', function() {
-        let input = document.createElement('input');
-        input.type = 'file';
-        input.accept = 'image/*,video/*';
-        
-        input.onchange = function(e) {
-          let file = e.target.files[0];
-          if (file.type.startsWith('image/')) {
-            loadImage(URL.createObjectURL(file), function(img) {
-              backgroundImage = img;
-              isVideo = false;
-              // Clean up any existing video
-              if (backgroundVideo) {
-                backgroundVideo.remove();
-                backgroundVideo = null;
-              }
-            });
-          } else if (file.type.startsWith('video/')) {
-            let video = createVideo(URL.createObjectURL(file), function() {
-              backgroundVideo = video;
-              backgroundVideo.loop();
-              backgroundVideo.hide();
-              backgroundVideo.volume(0);
-              isVideo = true;
-              backgroundImage = null;
-            });
-          }
-        };
-        
-        input.click();
-      });
+        uploadBG.addEventListener('click', handleBackgroundUpload);
     }
-  
-    // Color picker setup
-    let colourPicker = document.getElementById('colourBG');
-    if (colourPicker) {
-      colourPicker.value = '#DCDCDC';
-      colourPicker.style.backgroundColor = colourPicker.value;
-      
-      colourPicker.addEventListener('input', function() {
-        backgroundHandler.setBackground(this.value);
-        this.style.backgroundColor = this.value;
-      });
-    }
-  
-    // Add text color picker setup
-    let textColorPicker = document.getElementById('colourText');
-    if (textColorPicker) {
-      textColorPicker.value = '#FFFFFF';
-      textColorPicker.style.backgroundColor = textColorPicker.value;
-      
-      textColorPicker.addEventListener('input', function() {
-        colourText = color(this.value);
-        this.style.backgroundColor = this.value;
-      });
-    }
-  
+
     // Reset background button setup
     let resetBG = document.getElementById('resetBG');
     if (resetBG) {
-      resetBG.addEventListener('click', function() {
-        // Remove video if it exists
-        if (backgroundVideo) {
-          backgroundVideo.remove();
-          backgroundVideo = null;
-        }
-        
-        // Clear image
-        backgroundImage = null;
-        isVideo = false;
-        
-        // Reset to default color
-        colourBG = 220;
-        backgroundHandler.setBackground('#DCDCDC');
-        
-        // Reset color picker if it exists
-        let colorPicker = document.getElementById('colourBG');
-        if (colorPicker) {
-          colorPicker.value = '#DCDCDC';  // Default color in hex
-          colorPicker.style.backgroundColor = colorPicker.value;
-        }
-        
-        // Reset file input if it exists
-        let uploadBG = document.getElementById('uploadBG');
-        if (uploadBG) {
-          uploadBG.value = '';  // Clear the file input
-        }
-      });
+        resetBG.addEventListener('click', function() {
+            backgroundHandler.reset();
+        });
     }
-  
+
+    // Text color setup
+    let colourE1 = document.getElementById('colourE1');
+    if (colourE1) {
+        colourE1.value = '#FFFFFF';
+        colourE1.style.backgroundColor = colourE1.value;
+        
+        colourE1.addEventListener('input', function() {
+            E1Colour = color(this.value);
+            this.style.backgroundColor = this.value;
+        });
+    }
+
     setupExportButtons();
-  }
-  
-  function draw() {
+
+    // Add upload button listener
+    let uploadE1Button = document.getElementById('uploadE1');
+    if (uploadE1Button) {
+        uploadE1Button.addEventListener('click', handleE1Upload);
+    }
+    
+    // Add reset button listener
+    let resetE1Button = document.getElementById('resetE1');
+    if (resetE1Button) {
+        resetE1Button.addEventListener('click', resetE1);
+    }
+}
+
+function draw() {
     clear();
     
-    // Draw background
-    if (isVideo && backgroundVideo) {
-      // Draw video background
-      let scale = Math.max(width / backgroundVideo.width, height / backgroundVideo.height);
-      let w = backgroundVideo.width * scale;
-      let h = backgroundVideo.height * scale;
-      let x = (width - w) / 2;
-      let y = (height - h) / 2;
-      image(backgroundVideo, x, y, w, h);
-    } else if (backgroundImage) {
-      // Draw image background
-      let scale = Math.max(width / backgroundImage.width, height / backgroundImage.height);
-      let w = backgroundImage.width * scale;
-      let h = backgroundImage.height * scale;
-      let x = (width - w) / 2;
-      let y = (height - h) / 2;
-      image(backgroundImage, x, y, w, h);
-    } else {
-      // Draw color background using backgroundHandler's color
-      background(backgroundHandler.color);
-    }
-  
+    // Draw background using backgroundHandler
+    backgroundHandler.draw();
+
     // Clear the PGraphics buffer
     pg.clear();
     pg.background(0, 0, 0, 0); // transparent background
-    pg.fill(colourText);
-    pg.textAlign(CENTER, CENTER);
     
-    let inputText = textInput.value;
-    
-    // Apply text size from slider instead of calculating
-    let baseSize = parseFloat(ts.value);
-    pg.textSize(baseSize);
-    
-    // Apply text weight if supported
-    if (pg.textStyle) {
-      pg.textStyle(parseFloat(tw.value));
-    }
-    
-    // Apply tracking (letter spacing)
-    let tracking = parseFloat(tt.value) / 100;  // Convert percentage to decimal
-    let leading = parseFloat(tl.value) / 100;   // Convert percentage to decimal
-    
-    pg.push();
-    pg.translate(width/2 + parseFloat(tpx.value) * 5, height/2 + parseFloat(tpy.value) * 5);
-    pg.scale(parseFloat(tsx.value), parseFloat(tsy.value));
-    
-    // Draw text with tracking and leading
-    if (inputText) {
-      let chars = inputText.split('');
-      let totalWidth = 0;
-      
-      // Calculate total width with tracking
-      chars.forEach(char => {
-        totalWidth += pg.textWidth(char) * (1 + tracking);
-      });
-      
-      // Center the text
-      let xPos = -totalWidth / 2;
-      let yPos = 0;
-      
-      // Draw each character with tracking
-      chars.forEach(char => {
-        pg.text(char, xPos, yPos);
-        xPos += pg.textWidth(char) * (1 + tracking);
-        yPos += baseSize * leading;  // Apply leading
-      });
-    }
-    
-    pg.pop();
-  
-    // Draw the tiled text effect
-    let tilesX = parseInt(tX.value);
-    let tilesY = parseInt(tY.value);
-    let tileW = int(width/tilesX);
-    let tileH = int(height/tilesY);
-  
-    for (let y = 0; y < tilesY; y++) {
-      for (let x = 0; x < tilesX; x++) {
-        let waveX = int(sin(frameCount * parseFloat(sp.value) + (x * y) * parseFloat(dspx.value)) * parseFloat(fct.value));
-        let waveY = int(sin(frameCount * parseFloat(sp.value) + (x * y) * parseFloat(dspy.value)) * parseFloat(fct.value));
-  
-        if (parseFloat(dspx.value) === 0) waveX = 0;
-        if (parseFloat(dspy.value) === 0) waveY = 0;
+    // Handle E1 drawing based on type
+    if (E1Type === 'text') {
+        pg.fill(E1Colour);
+        pg.textAlign(CENTER, CENTER);
+        E1 = document.getElementById('textAreaE1').value;
         
-        let sx = x*tileW + waveX;
-        let sy = y*tileH + waveY;
-        copy(pg, sx, sy, tileW, tileH, x*tileW, y*tileH, tileW, tileH);
-      }
+        // Apply text styling
+        pg.textSize(parseFloat(tsE1.value));
+        
+        pg.push();
+        pg.translate(
+            width/2 + parseFloat(document.getElementById('rangeE1PX').value) * 5, 
+            height/2 + parseFloat(document.getElementById('rangeE1PY').value) * 5
+        );
+        pg.scale(parseFloat(textScaleXE1.value), parseFloat(textScaleYE1.value));
+        
+        // Draw text with tracking and leading
+        if (E1) {
+            let chars = E1.split('');
+            let totalWidth = 0;
+            let tracking = parseFloat(ttE1.value) / 100;
+            let leading = parseFloat(tlE1.value) / 100;
+            
+            // Calculate total width with tracking
+            chars.forEach(char => {
+                totalWidth += pg.textWidth(char) * (1 + tracking);
+            });
+            
+            // Center the text
+            let xPos = -totalWidth / 2;
+            let yPos = 0;
+            
+            // Draw each character with tracking
+            chars.forEach(char => {
+                pg.text(char, xPos, yPos);
+                xPos += pg.textWidth(char) * (1 + tracking);
+                yPos += parseFloat(tsE1.value) * leading;  // Apply leading
+            });
+        }
+        
+        pg.pop();
+    } else if (E1Media) {
+        pg.push();
+        pg.translate(
+            width/2 + parseFloat(document.getElementById('rangeE1PX').value) * 5,
+            height/2 + parseFloat(document.getElementById('rangeE1PY').value) * 5
+        );
+        pg.scale(parseFloat(textScaleXE1.value), parseFloat(textScaleYE1.value));
+        
+        if (E1Type === 'svg') {
+            pg.tint(E1Colour);
+        }
+        
+        if (E1Type === 'video') {
+            pg.image(E1Media, -E1Media.width/2, -E1Media.height/2);
+        } else {
+            pg.image(E1Media, -E1Media.width/2, -E1Media.height/2);
+        }
+        
+        pg.pop();
     }
-  }
-  
-  function windowResized() {
+
+    // Draw the tiled text effect
+    let tilesXE1 = parseInt(tXE1.value);
+    let tilesYE1 = parseInt(tYE1.value);
+    let tileWE1 = int(width/tilesXE1);
+    let tileHE1 = int(height/tilesYE1);
+
+    for (let y = 0; y < tilesYE1; y++) {
+        for (let x = 0; x < tilesXE1; x++) {
+            let waveXE1 = int(sin(frameCount * parseFloat(spE1.value) + (x * y) * parseFloat(dspxE1.value)) * parseFloat(fctE1.value));
+            let waveYE1 = int(sin(frameCount * parseFloat(spE1.value) + (x * y) * parseFloat(dspyE1.value)) * parseFloat(fctE1.value));
+
+            if (parseFloat(dspxE1.value) === 0) waveXE1 = 0;
+            if (parseFloat(dspyE1.value) === 0) waveYE1 = 0;
+            
+            let sxE1 = x*tileWE1 + waveXE1;
+            let syE1 = y*tileHE1 + waveYE1;
+            copy(pg, sxE1, syE1, tileWE1, tileHE1, x*tileWE1, y*tileHE1, tileWE1, tileHE1);
+        }
+    }
+}
+
+function windowResized() {
     let outputDiv = document.getElementById('output');
     resizeCanvas(outputDiv.offsetWidth, outputDiv.offsetHeight);
-  }
-  
-  function createSliders() {
-    // Get all range inputs
-    tX = document.getElementById('rangeTX');
-    tY = document.getElementById('rangeTY');
-    sp = document.getElementById('rangeSpeed');
-    dspx = document.getElementById('rangeDX');
-    dspy = document.getElementById('rangeDY');
-    fct = document.getElementById('rangeOffset');
-    tpx = document.getElementById('rangeTPX');
-    tpy = document.getElementById('rangeTPY');
-    tsx = document.getElementById('rangeTSX');
-    tsy = document.getElementById('rangeTSY');
-    ts = document.getElementById('rangeTS');
-    tw = document.getElementById('rangeTW');
-    tt = document.getElementById('rangeTT');
-    tl = document.getElementById('rangeTL');
-  
-    // Initialize all range value displays with their corresponding slider values
-    initializeRangeValue('rangeValueTX', tX);
-    initializeRangeValue('rangeValueTY', tY);
-    initializeRangeValue('rangeValueSpeed', sp);
-    initializeRangeValue('rangeValueDX', dspx);
-    initializeRangeValue('rangeValueDY', dspy);
-    initializeRangeValue('rangeValueOffset', fct);
-    initializeRangeValue('rangeValueTPX', tpx);
-    initializeRangeValue('rangeValueTPY', tpy);
-    initializeRangeValue('rangeValueTSX', tsx);
-    initializeRangeValue('rangeValueTSY', tsy);
-    initializeRangeValue('rangeValueTS', ts);
-    initializeRangeValue('rangeValueTW', tw);
-    initializeRangeValue('rangeValueTT', tt, '%');
-    initializeRangeValue('rangeValueTL', tl, '%');
-  
-    // Add event listeners to update display values
-    tX.addEventListener('input', () => {
-      document.getElementById('rangeValueTX').textContent = tX.value;
-    });
-    tY.addEventListener('input', () => {
-      document.getElementById('rangeValueTY').textContent = tY.value;
-    });
-    sp.addEventListener('input', () => {
-      document.getElementById('rangeValueSpeed').textContent = sp.value;
-    });
-    dspx.addEventListener('input', () => {
-      document.getElementById('rangeValueDX').textContent = dspx.value;
-    });
-    dspy.addEventListener('input', () => {
-      document.getElementById('rangeValueDY').textContent = dspy.value;
-    });
-    fct.addEventListener('input', () => {
-      document.getElementById('rangeValueOffset').textContent = fct.value;
-    });
-    tpx.addEventListener('input', () => {
-      document.getElementById('rangeValueTPX').textContent = tpx.value;
-    });
-    tpy.addEventListener('input', () => {
-      document.getElementById('rangeValueTPY').textContent = tpy.value;
-    });
-    tsx.addEventListener('input', () => {
-      document.getElementById('rangeValueTSX').textContent = tsx.value;
-      console.log('TSX changed:', tsx.value);
-    });
-    tsy.addEventListener('input', () => {
-      document.getElementById('rangeValueTSY').textContent = tsy.value;
-      console.log('TSY changed:', tsy.value);
-    });
-  
-    // Add event listeners for new controls
-    if (ts) {
-      ts.addEventListener('input', () => {
-        document.getElementById('rangeValueTS').textContent = ts.value;
-      });
+}
+
+function createSliders() {
+    // Get all range inputs for E1
+    tXE1 = document.getElementById('rangeE1TX');
+    tYE1 = document.getElementById('rangeE1TY');
+    spE1 = document.getElementById('rangeE1Speed');
+    dspxE1 = document.getElementById('rangeE1DX');
+    dspyE1 = document.getElementById('rangeE1DY');
+    fctE1 = document.getElementById('rangeE1Offset');
+    textScaleXE1 = document.getElementById('rangeE1SX');
+    textScaleYE1 = document.getElementById('rangeE1SY');
+    tsE1 = document.getElementById('rangeE1S');
+    twE1 = document.getElementById('rangeE1W');
+    ttE1 = document.getElementById('rangeE1T');
+    tlE1 = document.getElementById('rangeE1L');
+
+    // Initialize range value displays
+    initializeRangeValue('rangeValueE1TX', tXE1);
+    initializeRangeValue('rangeValueE1TY', tYE1);
+    initializeRangeValue('rangeValueE1Speed', spE1);
+    initializeRangeValue('rangeValueE1DX', dspxE1);
+    initializeRangeValue('rangeValueE1DY', dspyE1);
+    initializeRangeValue('rangeValueE1Offset', fctE1);
+    initializeRangeValue('rangeValueE1PX', document.getElementById('rangeE1PX'));
+    initializeRangeValue('rangeValueE1PY', document.getElementById('rangeE1PY'));
+    initializeRangeValue('rangeValueE1SX', textScaleXE1);
+    initializeRangeValue('rangeValueE1SY', textScaleYE1);
+    initializeRangeValue('rangeValueE1S', tsE1);
+    initializeRangeValue('rangeValueE1W', twE1);
+    initializeRangeValue('rangeValueE1T', ttE1, '%');
+    initializeRangeValue('rangeValueE1L', tlE1, '%');
+
+    // Add event listeners for all sliders
+    addSliderEventListener(document.getElementById('rangeE1PX'), 'rangeValueE1PX');
+    addSliderEventListener(document.getElementById('rangeE1PY'), 'rangeValueE1PY');
+    addSliderEventListener(textScaleXE1, 'rangeValueE1SX');
+    addSliderEventListener(textScaleYE1, 'rangeValueE1SY');
+    addSliderEventListener(tsE1, 'rangeValueE1S');
+    addSliderEventListener(twE1, 'rangeValueE1W');
+    addSliderEventListener(ttE1, 'rangeValueE1T', '%');
+    addSliderEventListener(tlE1, 'rangeValueE1L', '%');
+}
+
+function addSliderEventListener(slider, valueId, suffix = '') {
+    if (slider) {
+        slider.addEventListener('input', () => {
+            document.getElementById(valueId).textContent = slider.value + suffix;
+        });
     }
-    if (tw) {
-      tw.addEventListener('input', () => {
-        document.getElementById('rangeValueTW').textContent = tw.value;
-      });
-    }
-    if (tt) {
-      tt.addEventListener('input', () => {
-        document.getElementById('rangeValueTT').textContent = tt.value + '%';
-      });
-    }
-    if (tl) {
-      tl.addEventListener('input', () => {
-        document.getElementById('rangeValueTL').textContent = tl.value + '%';
-      });
-    }
-  }
-  
-  // Helper function to initialize range value displays
-  function initializeRangeValue(displayId, slider, suffix = '') {
+}
+
+function initializeRangeValue(displayId, slider, suffix = '') {
     const display = document.getElementById(displayId);
     if (display && slider) {
-      display.textContent = slider.value + suffix;
+        display.textContent = slider.value + suffix;
     }
-  }
-  
-  function setupExportButtons() {
+}
+
+function setupExportButtons() {
     // PDF Export
     document.getElementById('exportPDF').addEventListener('click', exportToPDF);
     
@@ -423,24 +367,24 @@ let backgroundHandler = {
     
     // MP4 Export
     document.getElementById('exportMP4').addEventListener('click', exportToMP4);
-  }
-  
-  function exportToPDF() {
+}
+
+function exportToPDF() {
     const outputDiv = document.getElementById('output');
     html2pdf()
-      .from(outputDiv)
-      .save('kinetic-type-export.pdf');
-  }
-  
-  function exportToPNG() {
+        .from(outputDiv)
+        .save('kinetic-type-export.pdf');
+}
+
+function exportToPNG() {
     saveCanvas('kinetic-type-export', 'png');
-  }
-  
-  function exportToJPG() {
+}
+
+function exportToJPG() {
     saveCanvas('kinetic-type-export', 'jpg');
-  }
-  
-  function exportToSVG() {
+}
+
+function exportToSVG() {
     // Create a new SVG element
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.setAttribute('width', width);
@@ -452,139 +396,248 @@ let backgroundHandler = {
     link.download = 'kinetic-type-export.svg';
     link.href = svgData;
     link.click();
-  }
-  
-  async function exportToMP4() {
+}
+
+async function exportToMP4() {
     try {
-      // Check for MediaRecorder support
-      if (!window.MediaRecorder) {
-        throw new Error('Your browser does not support video recording');
-      }
-  
-      // Check for canvas existence
-      const canvas = document.querySelector('#defaultCanvas0');
-      if (!canvas) {
-        throw new Error('Canvas element not found');
-      }
-  
-      // Create timestamp for filename
-      const now = new Date();
-      const timestamp = [
-        now.getFullYear().toString(),
-        (now.getMonth() + 1).toString().padStart(2, '0'),
-        now.getDate().toString().padStart(2, '0'),
-        now.getHours().toString().padStart(2, '0'),
-        now.getMinutes().toString().padStart(2, '0'),
-        now.getSeconds().toString().padStart(2, '0')
-      ].join('-');
-  
-      // Try to use the highest quality codec available
-      const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9') 
-        ? 'video/webm;codecs=vp9'
-        : MediaRecorder.isTypeSupported('video/webm;codecs=h264')
-          ? 'video/webm;codecs=h264'
-          : 'video/webm';
-  
-      // Get stream with higher framerate
-      let stream = canvas.captureStream(60); // Increased to 60fps
-  
-      // Create MediaRecorder with higher quality settings
-      const mediaRecorder = new MediaRecorder(stream, {
-        mimeType,
-        videoBitsPerSecond: 200000000 // Increased to 20Mbps
-      });
-  
-      const chunks = [];
-      
-      return new Promise((resolve, reject) => {
-        mediaRecorder.ondataavailable = (e) => {
-          if (e.data.size > 0) {
-            chunks.push(e.data);
-          }
-        };
-  
-        mediaRecorder.onerror = (event) => {
-          reject(new Error(`Recording error: ${event.error.message}`));
-          resetUI();
-        };
-  
-        mediaRecorder.onstop = async () => {
-          try {
-            const blob = new Blob(chunks, { 
-              type: mimeType,
-            });
-            const url = URL.createObjectURL(blob);
-            
-            const a = document.createElement('a');
-            a.style.display = 'none';
-            a.href = url;
-            a.download = `expressionofexpose-${timestamp}.webm`;
-            
-            document.body.appendChild(a);
-            a.click();
-            
-            setTimeout(() => {
-              document.body.removeChild(a);
-              URL.revokeObjectURL(url);
-            }, 100);
-            
-            resolve();
-          } catch (err) {
-            reject(new Error(`Failed to save recording: ${err.message}`));
-          } finally {
-            resetUI();
-          }
-        };
-  
-        const resetUI = () => {
-          const recordButton = document.getElementById('exportMP4');
-          if (recordButton) {
-            recordButton.style.backgroundColor = '';
-            recordButton.textContent = 'VIDEO';
-            recordButton.disabled = false;
-          }
-        };
-  
-        const updateUI = () => {
-          const recordButton = document.getElementById('exportMP4');
-          if (recordButton) {
-            recordButton.style.backgroundColor = 'red';
-            recordButton.textContent = 'Recording...';
-            recordButton.disabled = true;
-          }
-        };
-  
-        try {
-          updateUI();
-          // Request data more frequently
-          mediaRecorder.start(20); // Reduced to 20ms intervals
-          console.log('Recording started...');
-  
-          // Record for longer duration
-          setTimeout(() => {
-            if (mediaRecorder.state === 'recording') {
-              mediaRecorder.stop();
-              console.log('Recording stopped');
-            }
-          }, 5000); // Increased to 5 seconds
-  
-          const cleanupHandler = () => {
-            if (mediaRecorder.state === 'recording') {
-              mediaRecorder.stop();
-            }
-            window.removeEventListener('beforeunload', cleanupHandler);
-          };
-  
-          window.addEventListener('beforeunload', cleanupHandler);
-          
-        } catch (err) {
-          reject(new Error(`Failed to start recording: ${err.message}`));
-          resetUI();
+        // Check for MediaRecorder support
+        if (!window.MediaRecorder) {
+            throw new Error('Your browser does not support video recording');
         }
-      });
+
+        // Check for canvas existence
+        const canvas = document.querySelector('#defaultCanvas0');
+        if (!canvas) {
+            throw new Error('Canvas element not found');
+        }
+
+        // Create timestamp for filename
+        const now = new Date();
+        const timestamp = [
+            now.getFullYear().toString(),
+            (now.getMonth() + 1).toString().padStart(2, '0'),
+            now.getDate().toString().padStart(2, '0'),
+            now.getHours().toString().padStart(2, '0'),
+            now.getMinutes().toString().padStart(2, '0'),
+            now.getSeconds().toString().padStart(2, '0')
+        ].join('-');
+
+        // Try to use the highest quality codec available
+        const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9') 
+            ? 'video/webm;codecs=vp9'
+            : MediaRecorder.isTypeSupported('video/webm;codecs=h264')
+                ? 'video/webm;codecs=h264'
+                : 'video/webm';
+
+        // Get stream with higher framerate
+        let stream = canvas.captureStream(60); // Increased to 60fps
+
+        // Create MediaRecorder with higher quality settings
+        const mediaRecorder = new MediaRecorder(stream, {
+            mimeType,
+            videoBitsPerSecond: 200000000 // Increased to 20Mbps
+        });
+
+        const chunks = [];
+        
+        return new Promise((resolve, reject) => {
+            mediaRecorder.ondataavailable = (e) => {
+                if (e.data.size > 0) {
+                    chunks.push(e.data);
+                }
+            };
+
+            mediaRecorder.onerror = (event) => {
+                reject(new Error(`Recording error: ${event.error.message}`));
+                resetUI();
+            };
+
+            mediaRecorder.onstop = async () => {
+                try {
+                    const blob = new Blob(chunks, { 
+                        type: mimeType,
+                    });
+                    const url = URL.createObjectURL(blob);
+                    
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = url;
+                    a.download = `expressionofexpose-${timestamp}.webm`;
+                    
+                    document.body.appendChild(a);
+                    a.click();
+                    
+                    setTimeout(() => {
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                    }, 100);
+                    
+                    resolve();
+                } catch (err) {
+                    reject(new Error(`Failed to save recording: ${err.message}`));
+                } finally {
+                    resetUI();
+                }
+            };
+
+            const resetUI = () => {
+                const recordButton = document.getElementById('exportMP4');
+                if (recordButton) {
+                    recordButton.style.backgroundColor = '';
+                    recordButton.textContent = 'VIDEO';
+                    recordButton.disabled = false;
+                }
+            };
+
+            const updateUI = () => {
+                const recordButton = document.getElementById('exportMP4');
+                if (recordButton) {
+                    recordButton.style.backgroundColor = 'red';
+                    recordButton.textContent = 'Recording...';
+                    recordButton.disabled = true;
+                }
+            };
+
+            try {
+                updateUI();
+                // Request data more frequently
+                mediaRecorder.start(20); // Reduced to 20ms intervals
+                console.log('Recording started...');
+
+                // Record for longer duration
+                setTimeout(() => {
+                    if (mediaRecorder.state === 'recording') {
+                        mediaRecorder.stop();
+                        console.log('Recording stopped');
+                    }
+                }, 5000); // Increased to 5 seconds
+
+                const cleanupHandler = () => {
+                    if (mediaRecorder.state === 'recording') {
+                        mediaRecorder.stop();
+                    }
+                    window.removeEventListener('beforeunload', cleanupHandler);
+                };
+
+                window.addEventListener('beforeunload', cleanupHandler);
+                
+            } catch (err) {
+                reject(new Error(`Failed to start recording: ${err.message}`));
+                resetUI();
+            }
+        });
     } catch (err) {
-      console.error('Export error:', err);
-      alert(err.message);
-      throw err;
+        console.error('Export error:', err);
+        alert(err.message);
+        throw err;
     }
-  }
+}
+
+function handleBackgroundUpload() {
+    let input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*,video/*';
+    
+    input.onchange = function(e) {
+        let file = e.target.files[0];
+        if (file.type.startsWith('image/')) {
+            loadImage(URL.createObjectURL(file), function(img) {
+                backgroundHandler.setBackground(img);
+            });
+        } else if (file.type.startsWith('video/')) {
+            let video = createVideo(URL.createObjectURL(file), function() {
+                video.elt.playsInline = true;
+                video.elt.muted = true;
+                backgroundHandler.setBackground(video);
+            });
+        }
+    };
+    
+    input.click();
+}
+
+function handleE1Upload() {
+    let input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*,video/*,.svg';
+    
+    input.onchange = function(e) {
+        let file = e.target.files[0];
+        
+        // Disable text input
+        let textArea = document.getElementById('textAreaE1');
+        if (textArea) {
+            textArea.disabled = true;
+        }
+        
+        if (file.name.toLowerCase().endsWith('.svg')) {
+            // Handle SVG
+            let reader = new FileReader();
+            reader.onload = function(event) {
+                loadImage(event.target.result, img => {
+                    E1Media = img;
+                    E1Type = 'svg';
+                    toggleE1Controls('svg');
+                });
+            };
+            reader.readAsDataURL(file);
+        } else if (file.type.startsWith('image/')) {
+            // Handle image
+            loadImage(URL.createObjectURL(file), img => {
+                E1Media = img;
+                E1Type = 'image';
+                toggleE1Controls('image');
+            });
+        } else if (file.type.startsWith('video/')) {
+            // Handle video
+            let video = createVideo(URL.createObjectURL(file), () => {
+                E1Media = video;
+                E1Type = 'video';
+                video.elt.playsInline = true;
+                video.elt.muted = true;
+                video.loop();
+                video.hide();
+                toggleE1Controls('video');
+            });
+        }
+    };
+    
+    input.click();
+}
+
+function toggleE1Controls(type) {
+    const stylingControls = document.getElementById('stylingE1');
+    const colorControl = document.getElementById('colourControlE1');
+    const textArea = document.getElementById('textAreaE1');
+    
+    if (stylingControls) {
+        stylingControls.style.display = type === 'text' ? 'block' : 'none';
+    }
+    
+    if (colorControl) {
+        colorControl.style.display = (type === 'text' || type === 'svg') ? 'block' : 'none';
+    }
+    
+    if (textArea) {
+        textArea.style.display = type === 'text' ? 'block' : 'none';
+    }
+}
+
+function resetE1() {
+    // Clear media if it exists
+    if (E1Media && E1Type === 'video') {
+        E1Media.remove();
+    }
+    E1Media = null;
+    E1Type = 'text';
+    
+    // Enable and show text area
+    let textArea = document.getElementById('textAreaE1');
+    if (textArea) {
+        textArea.disabled = false;
+        textArea.style.display = 'block';
+    }
+    
+    // Show all controls
+    toggleE1Controls('text');
+}

@@ -1,0 +1,750 @@
+<!DOCTYPE html><html data-wf-page="676b7f5e86e091d74621190a" data-wf-site="676b7f5e86e091d746211904" data-wf-status="1"><head><meta charset="utf-8"/><title>EXPOSE EXPRESSION</title><meta content="width=device-width, initial-scale=1" name="viewport"/><meta content="Webflow" name="generator"/><link href="webflow-style.css" rel="stylesheet" type="text/css"/><script src="https://use.typekit.net/nqz6qbq.js" type="text/javascript"></script><script type="text/javascript">try{Typekit.load();}catch(e){}</script><script type="text/javascript">!function(o,c){var n=c.documentElement,t=" w-mod-";n.className+=t+"js",("ontouchstart"in o||o.DocumentTouch&&c instanceof DocumentTouch)&&(n.className+=t+"touch")}(window,document);</script><link href="https://cdn.prod.website-files.com/img/favicon.ico" rel="shortcut icon" type="image/x-icon"/><link href="https://cdn.prod.website-files.com/img/webclip.png" rel="apple-touch-icon"/><!-- P5 -->
+<script src="lib/p5.min.js"></script>
+<script>
+// Add debug logging for p5.js initialization
+console.log('p5.js loaded:', typeof p5 !== 'undefined');
+</script>
+<script src="lib/html2pdf.bundle.min.js"></script>
+<script src="lib/ffmpeg.min.js"></script>
+<script src="lib/ffmpeg-core.js"></script>
+<script src="lib/RecordRTC.js"></script>
+<script src="lib/gif.js"></script>
+<script src="lib/gif.worker.js"></script>
+
+<script src="main.js"></script></head><body><div class="w-embed"><style>
+
+
+</style></div><div class="fullscreenwrapper"><div class="toolwrapper"><div class="controlsplane"><div class="controlwrapper"><div class="controlheader">Background</div><div class="control"><div class="controllabelswrapper"><div class="controllabel">colour</div><div id="infoButtonBG" class="controllabel">(?)</div></div><input type="color" id="colourBG" class="button"/></div><div class="control"><div class="controllabelswrapper"><div class="controllabel">media</div><div id="infoButtonBG" class="controllabel">(?)</div></div><div class="varwrapper h"><button id="uploadBG" class="button">upload</button><button id="resetBG" class="button">REST</button></div></div></div><div class="controlwrapper"><div class="controlheader">element 01</div><div class="varwrapper"><div class="varwrapper"><div class="varwrapper sub"><div class="controllabel">TEXT</div><textarea id="textAreaE1" placeholder="write something " class="textfield area"></textarea></div><div class="varwrapper sub"><div class="controllabel">svg</div><div class="varwrapper h"><button id="uploadE1" class="button">upload</button><button id="resetE1" class="button">REST</button></div></div><div id="colourControlE1" class="varwrapper sub"><div class="controllabelswrapper"><div class="varlabel">colour</div><div id="infoButtonBG" class="varlabel">(?)</div></div><input type="color" id="colourE1" class="button"/></div><div id="postionE1" class="varwrapper sub"><div class="varlabel">POSITION</div><div class="varwrapper sub"><div id="rangeFieldWrapper" class="control"><div class="varlabelwrapper"><div class="varlabel">X</div><div id="infoButtonE1PX" class="varlabel">(?)</div></div><div class="range"><input id="rangeE1PX" type="range" min="-400" max="400" step="1" class="range" value="0"/><div id="rangeValueE1PX" class="varlabel value">000</div></div></div><div id="rangeFieldWrapper" class="control"><div class="varlabelwrapper"><div class="varlabel">Y</div><div id="infoButtonE1PY" class="varlabel">(?)</div></div><div class="range"><input id="rangeE1PY" type="range" min="-400" max="400" step="1" class="range" value="0"/><div id="rangeValueE1PY" class="varlabel value">000</div></div></div></div></div><div id="scaleE1" class="varwrapper sub"><div class="varlabel">Scale</div><div class="varwrapper sub"><div id="rangeFieldWrapper" class="control"><div class="varlabelwrapper"><div class="varlabel">X</div><div id="infoButtonE1SX" class="varlabel">(?)</div></div><div class="range"><input id="rangeE1SX" type="range" min="0.1" max="20" step="0.1" class="range" value="1"/><div id="rangeValueE1SX" class="varlabel value">000</div></div></div><div id="rangeFieldWrapper" class="control"><div class="varlabelwrapper"><div class="varlabel">Y</div><div id="infoButtonE1SY" class="varlabel">(?)</div></div><div class="range"><input id="rangeE1SY" type="range" min="0.1" max="20" step="0.1" class="range" value="1"/><div id="rangeValueE1SY" class="varlabel value">000</div></div></div></div></div><div id="stylingE1" class="varwrapper sub"><div class="varlabel">styling</div><div class="varwrapper sub"><div id="rangeFieldWrapper" class="control"><div class="varlabelwrapper"><div class="varlabel">Size</div><div id="infoButtonE1S" class="varlabel">(?)</div></div><div class="range"><input id="rangeE1S" type="range" min="10" max="100" step="1" class="range" value="32"/><div id="rangeValueE1S" class="varlabel value">000</div></div></div><div id="rangeFieldWrapper" class="control"><div class="varlabelwrapper"><div class="varlabel">wight</div><div id="infoButtonE1W" class="varlabel">(?)</div></div><div class="range"><input id="rangeE1W" type="range" min="1" max="1000" step="0.1" class="range" value="400"/><div id="rangeValueE1W" class="varlabel value">000</div></div></div><div id="rangeFieldWrapper" class="control"><div class="varlabelwrapper"><div class="varlabel">Tracking</div><div id="infoButtonE1T" class="varlabel">(?)</div></div><div class="range"><input id="rangeE1T" type="range" min="-10%" max="10%" step="0.25" class="range" value="0%"/><div id="rangeValueE1T" class="varlabel value">000</div></div></div><div id="rangeFieldWrapper" class="control"><div class="varlabelwrapper"><div class="varlabel">Line Hight </div><div id="infoButtonE1L" class="varlabel">(?)</div></div><div class="range"><input id="rangeE1L" type="range" min="-150%" max="150%" step="0.25" class="range" value="100%"/><div id="rangeValueE1L" class="varlabel value">000</div></div></div></div></div><div class="varwrapper sub"><div class="varlabel">Distortion</div><div id="rangeFieldWrapper" class="control"><div class="varlabelwrapper"><div class="varlabel">Tiles X</div><div id="infoButtonE1TX" class="varlabel">(?)</div></div><div class="range"><input id="rangeE1TX" type="range" min="" max="" step="step" class="range" value=""/><div id="rangeValueE1TX" class="varlabel value">000</div></div></div><div id="rangeFieldWrapper" class="control"><div class="varlabelwrapper"><div class="varlabel">Tiles Y</div><div id="infoButtonE1TY" class="varlabel">(?)</div></div><div class="range"><input id="rangeE1TY" type="range" min="" max="" step="step" class="range" value=""/><div id="rangeValueE1TY" class="varlabel value">000</div></div></div><div id="rangeFieldWrapper" class="control"><div class="varlabelwrapper"><div class="varlabel">Displacement X</div><div id="infoButtonE1DX" class="varlabel">(?)</div></div><div class="range"><input id="rangeE1DX" type="range" min="" max="" step="step" class="range" value=""/><div id="rangeValueE1DX" class="varlabel value">000</div></div></div><div id="rangeFieldWrapper" class="control"><div class="varlabelwrapper"><div class="varlabel">Displacement Y</div><div id="infoButtonE1DY" class="varlabel">(?)</div></div><div class="range"><input id="rangeE1DY" type="range" min="" max="" step="step" class="range" value=""/><div id="rangeValueE1DY" class="varlabel value">000</div></div></div><div id="rangeFieldWrapper" class="control"><div class="varlabelwrapper"><div class="varlabel">Offset</div><div id="infoButtonE1Offset" class="varlabel">(?)</div></div><div class="range"><input id="rangeE1Offset" type="range" min="" max="" step="step" class="range" value=""/><div id="rangeValueE1Offset" class="varlabel value">000</div></div></div><div id="rangeFieldWrapper" class="control"><div class="varlabelwrapper"><div class="varlabel">Speed</div><div id="infoButtonE1Speed" class="varlabel">(?)</div></div><div class="range"><input id="rangeE1Speed" type="range" min="" max="" step="step" class="range" value=""/><div id="rangeValueE1Speed" class="varlabel value">000</div></div></div></div></div></div></div><div class="controlwrapper"><div class="controlheader">element 02</div><div class="varwrapper"><div class="varwrapper"><div class="varwrapper sub"><div class="controllabel">TEXT</div><textarea id="textAreaE2" placeholder="write something " class="textfield area"></textarea></div><div class="varwrapper sub"><div class="controllabel">svg</div><div class="varwrapper h"><button id="uploadE2" class="button">upload</button><button id="resetE2" class="button">REST</button></div></div><div id="colourControlE1" class="varwrapper sub"><div class="controllabelswrapper"><div class="varlabel">colour</div><div id="infoButtonBG" class="varlabel">(?)</div></div><input type="color" id="colourE1" class="button"/></div><div id="postionE1" class="varwrapper sub"><div class="varlabel">POSITION</div><div class="varwrapper sub"><div id="rangeFieldWrapper" class="control"><div class="varlabelwrapper"><div class="varlabel">X</div><div id="infoButtonE2PX" class="varlabel">(?)</div></div><div class="range"><input id="rangeE2PX" type="range" min="-400" max="400" step="1" class="range" value="0"/><div id="rangeValueE2PX" class="varlabel value">000</div></div></div><div id="rangeFieldWrapper" class="control"><div class="varlabelwrapper"><div class="varlabel">Y</div><div id="infoButtonE2PY" class="varlabel">(?)</div></div><div class="range"><input id="rangeE2PY" type="range" min="-400" max="400" step="1" class="range" value="0"/><div id="rangeValueE2PY" class="varlabel value">000</div></div></div></div></div><div id="scaleE1" class="varwrapper sub"><div class="varlabel">Scale</div><div class="varwrapper sub"><div id="rangeFieldWrapper" class="control"><div class="varlabelwrapper"><div class="varlabel">X</div><div id="infoButtonE2SX" class="varlabel">(?)</div></div><div class="range"><input id="rangeE2SX" type="range" min="0.1" max="20" step="0.1" class="range" value="1"/><div id="rangeValueE2SX" class="varlabel value">000</div></div></div><div id="rangeFieldWrapper" class="control"><div class="varlabelwrapper"><div class="varlabel">Y</div><div id="infoButtonE2SY" class="varlabel">(?)</div></div><div class="range"><input id="rangeE2SY" type="range" min="0.1" max="20" step="0.1" class="range" value="1"/><div id="rangeValueE2SY" class="varlabel value">000</div></div></div></div></div><div id="stylingE1" class="varwrapper sub"><div class="varlabel">styling</div><div class="varwrapper sub"><div id="rangeFieldWrapper" class="control"><div class="varlabelwrapper"><div class="varlabel">Size</div><div id="infoButtonE2S" class="varlabel">(?)</div></div><div class="range"><input id="rangeE2S" type="range" min="10" max="100" step="1" class="range" value="32"/><div id="rangeValueE2S" class="varlabel value">000</div></div></div><div id="rangeFieldWrapper" class="control"><div class="varlabelwrapper"><div class="varlabel">wight</div><div id="infoButtonE2W" class="varlabel">(?)</div></div><div class="range"><input id="rangeE2W" type="range" min="1" max="1000" step="0.1" class="range" value="400"/><div id="rangeValueE2W" class="varlabel value">000</div></div></div><div id="rangeFieldWrapper" class="control"><div class="varlabelwrapper"><div class="varlabel">Tracking</div><div id="infoButtonE2T" class="varlabel">(?)</div></div><div class="range"><input id="rangeE2T" type="range" min="-10%" max="10%" step="0.25" class="range" value="0%"/><div id="rangeValueE2T" class="varlabel value">000</div></div></div><div id="rangeFieldWrapper" class="control"><div class="varlabelwrapper"><div class="varlabel">Line Hight </div><div id="infoButtonE2L" class="varlabel">(?)</div></div><div class="range"><input id="rangeE2L" type="range" min="-150%" max="150%" step="0.25" class="range" value="100%"/><div id="rangeValueE2L" class="varlabel value">000</div></div></div></div></div><div class="varwrapper sub"><div class="varlabel">Distortion</div><div id="rangeFieldWrapper" class="control"><div class="varlabelwrapper"><div class="varlabel">Tiles X</div><div id="infoButtonE2TX" class="varlabel">(?)</div></div><div class="range"><input id="rangeE2TX" type="range" min="" max="" step="step" class="range" value=""/><div id="rangeValueE2TX" class="varlabel value">000</div></div></div><div id="rangeFieldWrapper" class="control"><div class="varlabelwrapper"><div class="varlabel">Tiles Y</div><div id="infoButtonE2TY" class="varlabel">(?)</div></div><div class="range"><input id="rangeE2TY" type="range" min="" max="" step="step" class="range" value=""/><div id="rangeValueE2TY" class="varlabel value">000</div></div></div><div id="rangeFieldWrapper" class="control"><div class="varlabelwrapper"><div class="varlabel">Displacement X</div><div id="infoButtonE2DX" class="varlabel">(?)</div></div><div class="range"><input id="rangeE2DX" type="range" min="" max="" step="step" class="range" value=""/><div id="rangeValueE2DX" class="varlabel value">000</div></div></div><div id="rangeFieldWrapper" class="control"><div class="varlabelwrapper"><div class="varlabel">Displacement Y</div><div id="infoButtonE2DY" class="varlabel">(?)</div></div><div class="range"><input id="rangeE2DY" type="range" min="" max="" step="step" class="range" value=""/><div id="rangeValueE2DY" class="varlabel value">000</div></div></div><div id="rangeFieldWrapper" class="control"><div class="varlabelwrapper"><div class="varlabel">Offset</div><div id="infoButtonE2Offset" class="varlabel">(?)</div></div><div class="range"><input id="rangeE2Offset" type="range" min="" max="" step="step" class="range" value=""/><div id="rangeValueE2Offset" class="varlabel value">000</div></div></div><div id="rangeFieldWrapper" class="control"><div class="varlabelwrapper"><div class="varlabel">Speed</div><div id="infoButtonE2Speed" class="varlabel">(?)</div></div><div class="range"><input id="rangeE2Speed" type="range" min="" max="" step="step" class="range" value=""/><div id="rangeValueE2Speed" class="varlabel value">000</div></div></div></div></div></div></div><div class="controlwrapper hidden"><div class="controlheader">symbol</div><div class="control"><div class="controllabelswrapper"><div class="controllabel">expose Mark</div><div id="infoButtonEM" class="controllabel">(?)</div></div><div id="colourSymbol" class="textfield"><div>Colour</div></div></div><div class="varwrapper"><div class="varlabel">Postion</div><div class="varwrapper sub"><div id="rangeFieldWrapper" class="control"><div class="varlabelwrapper"><div class="varlabel">X</div><div id="infoButtonPX" class="varlabel">(?)</div></div><div class="range"><input id="rangeSPX" type="range" min="-400" max="400" step="1" class="range" value="0"/><div id="rangeValueSPX" class="varlabel value">000</div></div></div><div id="rangeFieldWrapper" class="control"><div class="varlabelwrapper"><div class="varlabel">Y</div><div id="infoButtonSPY" class="varlabel">(?)</div></div><div class="range"><input id="rangeSPY" type="range" min="-400" max="400" step="1" class="range" value="0"/><div id="rangeValueSPY" class="varlabel value">000</div></div></div></div></div><div class="varwrapper"><div class="varwrapper sub"><div id="rangeFieldWrapper" class="control"><div class="varlabelwrapper"><div class="varlabel">Scale</div><div id="infoButtonSS" class="varlabel">(?)</div></div><div class="range"><input id="rangeSS" type="range" min="" max="" step="step" class="range" value=""/><div id="rangeValueSS" class="varlabel value">000</div></div></div></div></div></div><div class="controlwrapper"><div class="controlheader">Export</div><div class="varwrapper"><div class="varwrapper sub"><button id="exportPDF" class="button">PDF</button><button id="exportSVG" class="button">SVG</button><button id="exportPNG" class="button">PNG</button><button id="exportJPG" class="button">JPG</button><button id="exportMP4" class="button">VIDEO</button></div></div></div></div><div id="output" class="outputplane"></div></div></div><script src="js/jquery.js?site=676b7f5e86e091d746211904" type="text/javascript"  ></script><script src="js/webflow-script.js" type="text/javascript"></script><script>
+
+let backgroundHandler = {
+  type: 'color',
+  color: '#ffffff',
+  media: null,
+  
+  setBackground(input) {
+    if (typeof input === 'string') {
+      this.type = 'color';
+      this.color = input;
+    } else if (input instanceof p5.Image) {
+      this.type = 'image';
+      this.media = input;
+    } else if (input instanceof p5.MediaElement) {
+      this.type = 'video';
+      if (this.media) this.media.remove();
+      this.media = input;
+      this.media.loop();
+      this.media.hide();
+      this.media.volume(0);
+    }
+    this.update();
+  },
+  
+  update() {
+    // Single implementation using p5.js methods
+  }
+};
+
+let colourBG = 220;
+let backgroundImage = null;
+let backgroundVideo = null;
+let isVideo = false;
+let font;
+let pg;
+
+
+let E1Colour = 255; // Default white text
+let E1; // Variable to store the text
+let E1Type = 'text'; // Can be 'text', 'svg', 'image', or 'video'
+let E1Media = null;
+
+// GRID AND ANIMATION CONTROLS
+let tXE1, tYE1;    // Tile Count X & Y
+let spE1;            // Speed
+let dspxE1, dspyE1;    // Displacement X & Y
+let fctE1;           // Factor/Offset
+
+// TEXT STYLE CONTROLS
+let textScaleXE1, textScaleYE1;    // Scale X & Y
+let tsE1;                // Text Size
+let twE1;                // Text Weight
+let ttE1;                // Text Tracking
+let tlE1;                // Text Leading
+
+// Wait for DOM to be fully loaded
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('DOM fully loaded');
+  
+  // Initialize p5.js in instance mode to have more control
+  new p5(function(p) {
+    let canvas;
+    
+    p.setup = function() {
+      console.log('p5.js setup function called');
+      try {
+        // Get the parent div element
+        let outputDiv = document.getElementById('output');
+        console.log('Output div found:', !!outputDiv);
+        
+        // Set initial size
+        let initialWidth = outputDiv.offsetWidth || window.innerWidth;
+        let initialHeight = outputDiv.offsetHeight || window.innerHeight;
+        console.log('Initial size:', initialWidth, initialHeight);
+        
+        // Create canvas with the same dimensions as the parent div
+        canvas = p.createCanvas(initialWidth, initialHeight);
+        console.log('Canvas created:', !!canvas);
+        
+        // Move the canvas inside the output div
+        canvas.parent('output');
+        console.log('Canvas parent set');
+        
+        // Add window resize handling
+        window.addEventListener('resize', function() {
+          let newWidth = outputDiv.offsetWidth || window.innerWidth;
+          let newHeight = outputDiv.offsetHeight || window.innerHeight;
+          console.log('Resizing canvas to:', newWidth, newHeight);
+          p.resizeCanvas(newWidth, newHeight);
+        });
+        
+        // Initialize PGraphics and sliders
+        pg = p.createGraphics(p.width, p.height);
+        createSliders();
+        
+        // Background controls setup
+        let colourBG = document.getElementById('colourBG');
+        if (colourBG) {
+          colourBG.value = '#DCDCDC';
+          colourBG.style.backgroundColor = colourBG.value;
+          
+          colourBG.addEventListener('input', function() {
+            backgroundHandler.setBackground(this.value);
+            this.style.backgroundColor = this.value;
+          });
+        }
+
+        // Background upload setup
+        let uploadBG = document.getElementById('uploadBG');
+        if (uploadBG) {
+          uploadBG.addEventListener('click', handleBackgroundUpload);
+        }
+
+        // Reset background button setup
+        let resetBG = document.getElementById('resetBG');
+        if (resetBG) {
+          resetBG.addEventListener('click', function() {
+            backgroundHandler.reset();
+          });
+        }
+
+        // Text color setup
+        let colourE1 = document.getElementById('colourE1');
+        if (colourE1) {
+          colourE1.value = '#FFFFFF';
+          colourE1.style.backgroundColor = colourE1.value;
+          
+          colourE1.addEventListener('input', function() {
+            E1Colour = color(this.value);
+            this.style.backgroundColor = this.value;
+          });
+        }
+
+        setupExportButtons();
+
+        // Add upload button listener
+        let uploadE1Button = document.getElementById('uploadE1');
+        if (uploadE1Button) {
+          uploadE1Button.addEventListener('click', handleE1Upload);
+        }
+        
+        // Add reset button listener
+        let resetE1Button = document.getElementById('resetE1');
+        if (resetE1Button) {
+          resetE1Button.addEventListener('click', resetE1);
+        }
+      } catch (error) {
+        console.error('Error in setup:', error);
+      }
+    };
+    
+    p.draw = function() {
+      console.log('p5.js draw function called, frame:', p.frameCount);
+      try {
+        // Your existing draw code, but use p. instead of global p5 functions
+        if (p.frameCount % 2 !== 0) return;
+        
+        p.clear();
+        
+        // Draw background
+        if (isVideo && backgroundVideo) {
+          let scale = Math.max(p.width / backgroundVideo.width, p.height / backgroundVideo.height);
+          let w = backgroundVideo.width * scale;
+          let h = backgroundVideo.height * scale;
+          let x = (p.width - w) / 2;
+          let y = (p.height - h) / 2;
+          p.image(backgroundVideo, x, y, w, h);
+        } else if (backgroundImage) {
+          let scale = Math.max(p.width / backgroundImage.width, p.height / backgroundImage.height);
+          let w = backgroundImage.width * scale;
+          let h = backgroundImage.height * scale;
+          let x = (p.width - w) / 2;
+          let y = (p.height - h) / 2;
+          p.image(backgroundImage, x, y, w, h);
+        } else {
+          p.background(backgroundHandler.color);
+        }
+        
+        // Clear the PGraphics buffer
+        pg.clear();
+        pg.background(0, 0, 0, 0); // transparent background
+        
+        // Handle E1 drawing based on type
+        if (E1Type === 'text') {
+          pg.fill(E1Colour);
+          pg.textAlign(CENTER, CENTER);
+          E1 = document.getElementById('textAreaE1').value;
+          
+          // Apply text styling
+          pg.textSize(parseFloat(tsE1.value));
+          
+          pg.push();
+          pg.translate(
+            p.width/2 + parseFloat(document.getElementById('rangeE1PX').value) * 5, 
+            p.height/2 + parseFloat(document.getElementById('rangeE1PY').value) * 5
+          );
+          pg.scale(parseFloat(textScaleXE1.value), parseFloat(textScaleYE1.value));
+          
+function setup() {
+  console.log('p5.js setup function called');
+  try {
+    // Get the parent div element
+    let outputDiv = document.getElementById('output');
+    console.log('Output div found:', !!outputDiv);
+    
+    // Create canvas with the same dimensions as the parent div
+    let canvas = createCanvas(outputDiv.offsetWidth, outputDiv.offsetHeight);
+    console.log('Canvas created:', !!canvas);
+    
+    // Move the canvas inside the output div
+    canvas.parent('output');
+    console.log('Canvas parent set');
+  
+    // Initialize PGraphics and sliders
+    pg = createGraphics(width, height);
+    createSliders();
+
+    // Background controls setup
+    let colourBG = document.getElementById('colourBG');
+    if (colourBG) {
+      colourBG.value = '#DCDCDC';
+      colourBG.style.backgroundColor = colourBG.value;
+      
+      colourBG.addEventListener('input', function() {
+        backgroundHandler.setBackground(this.value);
+        this.style.backgroundColor = this.value;
+      });
+    }
+
+    // Background upload setup
+    let uploadBG = document.getElementById('uploadBG');
+    if (uploadBG) {
+      uploadBG.addEventListener('click', handleBackgroundUpload);
+    }
+
+    // Reset background button setup
+    let resetBG = document.getElementById('resetBG');
+    if (resetBG) {
+      resetBG.addEventListener('click', function() {
+        backgroundHandler.reset();
+      });
+    }
+
+    // Text color setup
+    let colourE1 = document.getElementById('colourE1');
+    if (colourE1) {
+      colourE1.value = '#FFFFFF';
+      colourE1.style.backgroundColor = colourE1.value;
+      
+      colourE1.addEventListener('input', function() {
+        E1Colour = color(this.value);
+        this.style.backgroundColor = this.value;
+      });
+    }
+
+    setupExportButtons();
+
+    // Add upload button listener
+    let uploadE1Button = document.getElementById('uploadE1');
+    if (uploadE1Button) {
+      uploadE1Button.addEventListener('click', handleE1Upload);
+    }
+    
+    // Add reset button listener
+    let resetE1Button = document.getElementById('resetE1');
+    if (resetE1Button) {
+      resetE1Button.addEventListener('click', resetE1);
+    }
+  } catch (error) {
+    console.error('Error in setup:', error);
+  }
+}
+
+function draw() {
+  console.log('p5.js draw function called, frame:', frameCount);
+  try {
+    // Add frame rate limiting
+    if (frameCount % 2 !== 0) return; // Skip every other frame
+    
+    // Optimize tiled text effect
+    const tilesX = parseInt(tXE1.value);
+    const tilesY = parseInt(tYE1.value);
+    if (tilesX * tilesY > 100) {
+      console.warn('High tile count may impact performance');
+    }
+    
+    // Use requestAnimationFrame for smoother animations
+    requestAnimationFrame(() => {
+      clear();
+      
+      // Draw background
+      if (isVideo && backgroundVideo) {
+        // Draw video background
+        let scale = Math.max(width / backgroundVideo.width, height / backgroundVideo.height);
+        let w = backgroundVideo.width * scale;
+        let h = backgroundVideo.height * scale;
+        let x = (width - w) / 2;
+        let y = (height - h) / 2;
+        image(backgroundVideo, x, y, w, h);
+      } else if (backgroundImage) {
+        // Draw image background
+        let scale = Math.max(width / backgroundImage.width, height / backgroundImage.height);
+        let w = backgroundImage.width * scale;
+        let h = backgroundImage.height * scale;
+        let x = (width - w) / 2;
+        let y = (height - h) / 2;
+        image(backgroundImage, x, y, w, h);
+      } else {
+        // Draw color background using backgroundHandler's color
+        background(backgroundHandler.color);
+      }
+
+      // Clear the PGraphics buffer
+      pg.clear();
+      pg.background(0, 0, 0, 0); // transparent background
+      
+      // Handle E1 drawing based on type
+      if (E1Type === 'text') {
+        pg.fill(E1Colour);
+        pg.textAlign(CENTER, CENTER);
+        E1 = document.getElementById('textAreaE1').value;
+        
+        // Apply text styling
+        pg.textSize(parseFloat(tsE1.value));
+        
+        pg.push();
+        pg.translate(
+          width/2 + parseFloat(document.getElementById('rangeE1PX').value) * 5, 
+          height/2 + parseFloat(document.getElementById('rangeE1PY').value) * 5
+        );
+        pg.scale(parseFloat(textScaleXE1.value), parseFloat(textScaleYE1.value));
+        
+        // Draw text with tracking and leading
+        if (E1) {
+          let chars = E1.split('');
+          let totalWidth = 0;
+          let tracking = parseFloat(ttE1.value) / 100;
+          let leading = parseFloat(tlE1.value) / 100;
+          
+          // Calculate total width with tracking
+          chars.forEach(char => {
+            totalWidth += pg.textWidth(char) * (1 + tracking);
+          });
+          
+          // Center the text
+          let xPos = -totalWidth / 2;
+          let yPos = 0;
+          
+          // Draw each character with tracking
+          chars.forEach(char => {
+            pg.text(char, xPos, yPos);
+            xPos += pg.textWidth(char) * (1 + tracking);
+            yPos += parseFloat(tsE1.value) * leading;  // Apply leading
+          });
+        }
+        
+        pg.pop();
+      } else if (E1Media) {
+        pg.push();
+        pg.translate(
+          width/2 + parseFloat(document.getElementById('rangeE1PX').value) * 5,
+          height/2 + parseFloat(document.getElementById('rangeE1PY').value) * 5
+        );
+        pg.scale(parseFloat(textScaleXE1.value), parseFloat(textScaleYE1.value));
+        
+        if (E1Type === 'svg') {
+          pg.tint(E1Colour);
+        }
+        
+        if (E1Type === 'video') {
+          pg.image(E1Media, -E1Media.width/2, -E1Media.height/2);
+        } else {
+          pg.image(E1Media, -E1Media.width/2, -E1Media.height/2);
+        }
+        
+        pg.pop();
+      }
+
+      // Draw the tiled text effect
+      let tileWE1 = int(width/tilesX);
+      let tileHE1 = int(height/tilesY);
+
+      for (let y = 0; y < tilesY; y++) {
+        for (let x = 0; x < tilesX; x++) {
+          let waveXE1 = int(sin(frameCount * parseFloat(spE1.value) + (x * y) * parseFloat(dspxE1.value)) * parseFloat(fctE1.value));
+          let waveYE1 = int(sin(frameCount * parseFloat(spE1.value) + (x * y) * parseFloat(dspyE1.value)) * parseFloat(fctE1.value));
+
+          if (parseFloat(dspxE1.value) === 0) waveXE1 = 0;
+          if (parseFloat(dspyE1.value) === 0) waveYE1 = 0;
+          
+          let sxE1 = x*tileWE1 + waveXE1;
+          let syE1 = y*tileHE1 + waveYE1;
+          copy(pg, sxE1, syE1, tileWE1, tileHE1, x*tileWE1, y*tileHE1, tileWE1, tileHE1);
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error in draw:', error);
+  }
+}
+
+function windowResized() {
+  let outputDiv = document.getElementById('output');
+  resizeCanvas(outputDiv.offsetWidth, outputDiv.offsetHeight);
+}
+
+function createSliders() {
+  // Get all range inputs
+  tXE1 = document.getElementById('rangeE1TX');
+  tYE1 = document.getElementById('rangeE1TY');
+  spE1 = document.getElementById('rangeE1Speed');
+  dspxE1 = document.getElementById('rangeE1DX');
+  dspyE1 = document.getElementById('rangeE1DY');
+  fctE1 = document.getElementById('rangeE1Offset');
+  
+  // Text position and style controls
+  let tpxE1 = document.getElementById('rangeE1PX');
+  let tpyE1 = document.getElementById('rangeE1PY');
+  textScaleXE1 = document.getElementById('rangeE1SX');
+  textScaleYE1 = document.getElementById('rangeE1SY');
+  tsE1 = document.getElementById('rangeE1S');
+  ttE1 = document.getElementById('rangeE1T');
+  tlE1 = document.getElementById('rangeE1L');
+
+  // Initialize range value displays
+  initializeRangeValue('rangeValueE1TX', tXE1);
+  initializeRangeValue('rangeValueE1TY', tYE1);
+  initializeRangeValue('rangeValueE1Speed', spE1);
+  initializeRangeValue('rangeValueE1DX', dspxE1);
+  initializeRangeValue('rangeValueE1DY', dspyE1);
+  initializeRangeValue('rangeValueE1Offset', fctE1);
+  initializeRangeValue('rangeValueE1PX', tpxE1);
+  initializeRangeValue('rangeValueE1PY', tpyE1);
+  initializeRangeValue('rangeValueE1SX', textScaleXE1);
+  initializeRangeValue('rangeValueE1SY', textScaleYE1);
+  initializeRangeValue('rangeValueE1S', tsE1);
+  initializeRangeValue('rangeValueE1T', ttE1, '%');
+  initializeRangeValue('rangeValueE1L', tlE1, '%');
+
+  // Add event listeners for all sliders
+  addSliderEventListener(tpxE1, 'rangeValueE1PX');
+  addSliderEventListener(tpyE1, 'rangeValueE1PY');
+  addSliderEventListener(textScaleXE1, 'rangeValueE1SX');
+  addSliderEventListener(textScaleYE1, 'rangeValueE1SY');
+  addSliderEventListener(tsE1, 'rangeValueE1S');
+  addSliderEventListener(ttE1, 'rangeValueE1T', '%');
+  addSliderEventListener(tlE1, 'rangeValueE1L', '%');
+}
+
+function addSliderEventListener(slider, valueId, suffix = '') {
+  if (slider) {
+    slider.addEventListener('input', () => {
+      document.getElementById(valueId).textContent = slider.value + suffix;
+    });
+  }
+}
+
+// Helper function to initialize range value displays
+function initializeRangeValue(displayId, slider, suffix = '') {
+  const display = document.getElementById(displayId);
+  if (display && slider) {
+    display.textContent = slider.value + suffix;
+  }
+}
+
+function setupExportButtons() {
+  // PDF Export
+  document.getElementById('exportPDF').addEventListener('click', exportToPDF);
+  
+  // PNG Export
+  document.getElementById('exportPNG').addEventListener('click', exportToPNG);
+  
+  // JPG Export
+  document.getElementById('exportJPG').addEventListener('click', exportToJPG);
+  
+  // SVG Export
+  document.getElementById('exportSVG').addEventListener('click', exportToSVG);
+  
+  // MP4 Export
+  document.getElementById('exportMP4').addEventListener('click', exportToMP4);
+}
+
+function exportToPDF() {
+  const outputDiv = document.getElementById('output');
+  html2pdf()
+    .from(outputDiv)
+    .save('kinetic-type-export.pdf');
+}
+
+function exportToPNG() {
+  saveCanvas('kinetic-type-export', 'png');
+}
+
+function exportToJPG() {
+  saveCanvas('kinetic-type-export', 'jpg');
+}
+
+function exportToSVG() {
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('width', width);
+  svg.setAttribute('height', height);
+  
+  // Convert canvas to SVG properly
+  const ctx = pg.drawingContext;
+  const path = new Path2D();
+  // ... convert canvas content to SVG paths
+  
+  const serializer = new XMLSerializer();
+  const svgString = serializer.serializeToString(svg);
+  const blob = new Blob([svgString], { type: 'image/svg+xml' });
+  const url = URL.createObjectURL(blob);
+  
+  const link = document.createElement('a');
+  link.download = 'kinetic-type-export.svg';
+  link.href = url;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+async function exportToMP4() {
+  // Add proper error handling and browser checks
+  if (!window.MediaRecorder) {
+    throw new Error('Video recording is not supported in your browser');
+  }
+  
+  // Use more reasonable bitrate
+  const mediaRecorder = new MediaRecorder(stream, {
+    mimeType: getSupportedMimeType(),
+    videoBitsPerSecond: 8000000 // 8Mbps is usually sufficient
+  });
+  
+  // Add proper cleanup
+  const cleanup = () => {
+    if (mediaRecorder.state === 'recording') {
+      mediaRecorder.stop();
+    }
+    stream.getTracks().forEach(track => track.stop());
+  };
+}
+
+function handleBackgroundUpload() {
+  let input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*,video/*';
+  
+  input.onchange = function(e) {
+    let file = e.target.files[0];
+    if (file.type.startsWith('image/')) {
+      loadImage(URL.createObjectURL(file), function(img) {
+        backgroundHandler.setBackground(img);
+      });
+    } else if (file.type.startsWith('video/')) {
+      let video = createVideo(URL.createObjectURL(file), function() {
+        // Safari requires video to be played within a user gesture
+        video.elt.playsInline = true;
+        video.elt.muted = true;
+        backgroundHandler.setBackground(video);
+      });
+    }
+  };
+  
+  input.click();
+}
+
+function handleE1Upload() {
+  let input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*,video/*,.svg';
+  
+  input.onchange = function(e) {
+    let file = e.target.files[0];
+    
+    // Disable text input
+    let textArea = document.getElementById('textAreaE1');
+    if (textArea) {
+      textArea.disabled = true;
+    }
+    
+    if (file.name.toLowerCase().endsWith('.svg')) {
+      // Handle SVG
+      let reader = new FileReader();
+      reader.onload = function(event) {
+        loadImage(event.target.result, img => {
+          E1Media = img;
+          E1Type = 'svg';
+          toggleE1Controls('svg');
+        });
+      };
+      reader.readAsDataURL(file);
+    } else if (file.type.startsWith('image/')) {
+      // Handle image
+      loadImage(URL.createObjectURL(file), img => {
+        E1Media = img;
+        E1Type = 'image';
+        toggleE1Controls('image');
+      });
+    } else if (file.type.startsWith('video/')) {
+      // Handle video
+      let video = createVideo(URL.createObjectURL(file), () => {
+        E1Media = video;
+        E1Type = 'video';
+        // Safari requires video to be played within a user gesture
+        video.elt.playsInline = true;
+        video.elt.muted = true;
+        video.loop();
+        video.hide();
+        toggleE1Controls('video');
+      });
+    }
+  };
+  
+  input.click();
+}
+
+function toggleE1Controls(type) {
+  const stylingControls = document.getElementById('stylingE1');
+  const colorControl = document.getElementById('colourControlE1');
+  const textArea = document.getElementById('textAreaE1');
+  
+  if (stylingControls) {
+    stylingControls.style.display = type === 'text' ? 'block' : 'none';
+  }
+  
+  if (colorControl) {
+    colorControl.style.display = (type === 'text' || type === 'svg') ? 'block' : 'none';
+  }
+  
+  if (textArea) {
+    textArea.style.display = type === 'text' ? 'block' : 'none';
+  }
+}
+
+function resetE1() {
+  // Clear media if it exists
+  if (E1Media && E1Type === 'video') {
+    E1Media.remove();
+  }
+  E1Media = null;
+  E1Type = 'text';
+  
+  // Enable and show text area
+  let textArea = document.getElementById('textAreaE1');
+  if (textArea) {
+    textArea.disabled = false;
+    textArea.style.display = 'block';
+  }
+  
+  // Show all controls
+  toggleE1Controls('text');
+}
+
+// Use unique IDs for each element
+function createElementControls(elementId) {
+    return {
+        colorControl: document.getElementById(`colourControl${elementId}`),
+        positionControl: document.getElementById(`position${elementId}`),
+        // ... other controls
+    };
+}
+
+// Set proper range values
+function initializeRangeInputs() {
+    const ranges = {
+        'rangeE1TX': { min: 1, max: 20, step: 1, value: 1 },
+        'rangeE1TY': { min: 1, max: 20, step: 1, value: 1 },
+        // ... other ranges
+    };
+    
+    Object.entries(ranges).forEach(([id, config]) => {
+        const input = document.getElementById(id);
+        if (input) {
+            input.min = config.min;
+            input.max = config.max;
+            input.step = config.step;
+            input.value = config.value;
+        }
+    });
+}
+
+function validateMediaFile(file) {
+    const maxSize = 50 * 1024 * 1024; // 50MB
+    if (file.size > maxSize) {
+        throw new Error('File size exceeds 50MB limit');
+    }
+    
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/svg+xml', 'video/mp4', 'video/webm'];
+    if (!allowedTypes.includes(file.type)) {
+        throw new Error('Unsupported file type');
+    }
+}
+
+function handleMediaUpload(file, type) {
+    try {
+        validateMediaFile(file);
+        // ... handle upload
+    } catch (error) {
+        alert(error.message);
+    }
+}
+
+function getSupportedMimeType() {
+    const types = [
+        'video/webm;codecs=vp9',
+        'video/webm;codecs=h264',
+        'video/webm'
+    ];
+    
+    return types.find(type => MediaRecorder.isTypeSupported(type)) || 'video/webm';
+}
+
+function checkBrowserSupport() {
+    const features = {
+        videoRecording: !!window.MediaRecorder,
+        webGL: !!window.WebGLRenderingContext,
+        // ... other feature checks
+    };
+    
+    return features;
+}
+
+function updateUIState(state) {
+    const buttons = document.querySelectorAll('.button');
+    buttons.forEach(button => {
+        button.disabled = state === 'loading';
+        if (state === 'loading') {
+            button.dataset.originalText = button.textContent;
+            button.textContent = 'Loading...';
+        } else if (button.dataset.originalText) {
+            button.textContent = button.dataset.originalText;
+        }
+    });
+}
+</script></body></html>
