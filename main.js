@@ -89,6 +89,47 @@ let backgroundHandler = {
                 break;
         }
     },
+    setBackground(value) {
+        if (typeof value === "string") {
+            if (this.media && this.type === "video") {
+                this.media.remove();
+            }
+            this.type = "color";
+            this.color = value;
+            this.media = null;
+        } else if (value && value.elt && value.elt.tagName === "VIDEO") {
+            if (this.media && this.type === "video") {
+                this.media.remove();
+            }
+            this.type = "video";
+            this.media = value;
+            value.elt.playsInline = true;
+            value.elt.muted = true;
+            value.loop();
+            value.hide();
+        } else if (value) {
+            if (this.media && this.type === "video") {
+                this.media.remove();
+            }
+            this.type = "image";
+            this.media = value;
+        }
+        this.update();
+    },
+
+    reset() {
+        if (this.media && this.type === "video") {
+            this.media.remove();
+        }
+        this.media = null;
+        this.type = "color";
+        this.update();
+        const colorPicker = document.getElementById("colourBG");
+        if (colorPicker) {
+            colorPicker.value = this.color;
+            colorPicker.style.backgroundColor = this.color;
+        }
+    },
 
     draw() {
         switch (this.type) {
@@ -385,17 +426,8 @@ function exportToJPG() {
 }
 
 function exportToSVG() {
-    // Create a new SVG element
-    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svg.setAttribute('width', width);
-    svg.setAttribute('height', height);
-    
-    // Convert canvas content to SVG
-    const svgData = pg.elt.toDataURL('image/svg+xml');
-    const link = document.createElement('a');
-    link.download = 'kinetic-type-export.svg';
-    link.href = svgData;
-    link.click();
+    console.warn("SVG export is not supported with the canvas renderer. Exporting PNG instead.");
+    exportToPNG();
 }
 
 async function exportToMP4() {
